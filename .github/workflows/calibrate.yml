@@ -16,6 +16,12 @@ on:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
 
 jobs:
   calibrate:
@@ -44,3 +50,21 @@ jobs:
             git commit -m "калибровка: $(date -u +%Y-%m-%d)"
             git push
           fi
+
+      # Коммит, сделанный GITHUB_TOKEN, намеренно не запускает другие
+      # workflow — иначе была бы рекурсия. Значит update.yml сюда не
+      # придёт, и публиковать страницу надо в этом же прогоне.
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+  deploy:
+    needs: calibrate
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
