@@ -115,6 +115,14 @@ select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   font-family:"Source Serif 4",Georgia,serif;font-size:14px;line-height:1.55;color:var(--ink-2)}
 .calc-verdict b{color:var(--ink);font-weight:600}
 
+/* --- калибровка --- */
+.calib{margin-top:14px;padding:14px 17px;background:var(--surface-2);border:1px solid var(--rule)}
+.calib .v{font-family:"Source Serif 4",Georgia,serif;font-size:14px;line-height:1.55;color:var(--ink-2)}
+.calib .v b{color:var(--ink);font-weight:600}
+.calib table{min-width:0;margin-top:10px;font-size:12px}
+.calib td,.calib th{padding:4px 8px}
+.calib .bar{display:inline-block;height:6px;background:var(--crit);vertical-align:middle;margin-right:6px}
+
 /* --- шортлист --- */
 .short{margin-top:16px;border:1px solid var(--rule);background:var(--surface)}
 .short-empty{padding:20px 22px}
@@ -234,6 +242,7 @@ td.q{max-width:280px;line-height:1.35}
     </div>
     <div class="short" id="shortlist"></div>
     <div class="stages" id="stages"></div>
+    <div id="calib"></div>
     <p class="note">Стадии независимы по конструкции, иначе смысла в них нет: первая смотрит на форму текста,
     вторая ходит по названному URL и проверяет, что источник существует, третья требует написать процедуру
     разрешения с дословными цитатами. Повторить один и тот же анализ дважды означало бы удвоить уверенность
@@ -575,6 +584,26 @@ function renderShort(d){
     </div>`;
   }).join('');
 }
+/* ---------- калибровка ---------- */
+fetch('data/calibration.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(d=>{
+  if(!d) return;
+  const rows=Object.values(d.per_criterion||{}).sort((a,b)=>b.fail_rate-a.fail_rate);
+  document.getElementById('calib').innerHTML=`<div class="calib">
+    <div class="v"><b>Калибровка порога.</b> ${d.verdict}</div>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Критерий</th><th>Отсеивает</th><th>Прошли</th></tr></thead>
+      <tbody>${rows.map(r=>`<tr>
+        <td>${r.name}</td>
+        <td class="n"><span class="bar" style="width:${Math.round(r.fail_rate*0.6)}px"></span>${ru(r.fail_rate,1)} %</td>
+        <td class="n">${r.passed} из ${r.passed+r.failed}</td></tr>`).join('')}</tbody>
+    </table></div>
+    <div class="v" style="font-size:12.5px;margin-top:10px;color:var(--muted)">
+      Выборка — рынки, которые уже закрылись с определённым исходом и без спора в UMA,
+      то есть заведомо разрешимые. Критерий, отсекающий почти всех из них, описывает
+      не исполнимость, а вкус автора фильтра.</div>
+  </div>`;
+}).catch(()=>{});
+
 fetch('data/shortlist.json',{cache:'no-store'})
   .then(r=>r.ok?r.json():null).then(renderShort).catch(()=>renderShort(null));
 
