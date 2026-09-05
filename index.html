@@ -115,6 +115,29 @@ select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   font-family:"Source Serif 4",Georgia,serif;font-size:14px;line-height:1.55;color:var(--ink-2)}
 .calc-verdict b{color:var(--ink);font-weight:600}
 
+/* --- шортлист --- */
+.short{margin-top:16px;border:1px solid var(--rule);background:var(--surface)}
+.short-empty{padding:20px 22px}
+.short-empty .t{font-size:17px;font-weight:600;margin-bottom:6px}
+.short-empty .b{font-family:"Source Serif 4",Georgia,serif;font-size:14.5px;
+  line-height:1.6;color:var(--ink-2);max-width:64ch}
+.short-item{padding:18px 22px;border-bottom:1px solid var(--rule)}
+.short-item:last-child{border-bottom:none}
+.short-q{font-size:15px;font-weight:600;line-height:1.3;max-width:56ch}
+.short-econ{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--muted);margin-top:4px}
+.ev{margin-top:12px;display:grid;grid-template-columns:auto 1fr;gap:6px 14px;
+  font-size:12.5px;align-items:baseline}
+.ev dt{color:var(--muted);white-space:nowrap;font-size:10.5px;letter-spacing:.07em;
+  text-transform:uppercase;font-weight:600}
+.ev dd{margin:0;color:var(--ink-2);line-height:1.45;overflow-wrap:anywhere}
+.ev code{font-family:"IBM Plex Mono",monospace;font-size:11.5px;background:var(--surface-2);padding:1px 4px}
+.proc{margin:10px 0 0;padding-left:20px;font-size:12.5px;color:var(--ink-2);line-height:1.5}
+.proc li{margin-bottom:3px}
+.confirm{margin-top:12px;padding-top:10px;border-top:1px solid var(--rule);
+  font-size:12px;color:var(--muted);line-height:1.45}
+.stages{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;font-size:11.5px;color:var(--muted)}
+.stages b{color:var(--ink-2);font-weight:600}
+
 /* --- таблицы --- */
 .tablewrap{overflow-x:auto;margin-top:14px}
 table{border-collapse:collapse;width:100%;font-size:12.5px;min-width:760px}
@@ -202,6 +225,20 @@ td.q{max-width:280px;line-height:1.35}
     <div class="eyebrow">Посылка, на которой построена страница</div>
     <h2>Дешёвый хвост здесь — не скидка, а наценка</h2>
     <p>Разбор 313 972 наблюдений по 46 282 контрактам Kalshi за 2021 — апрель 2025 даёт прямой ответ: контракты дешевле 10 центов <b>теряют более 60% вложенного</b>, средняя доходность по всем контрактам около −20% до комиссий, а небольшая положительная доходность встречается только у контрактов дороже 50 центов. Поэтому эта страница не ищет дешёвые хвосты для покупки. Она смотрит на <b>сторону фаворита</b> и, главное, заставляет прочитать правила прежде, чем считать это находкой.</p>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <h3>Шортлист: случай Бёрри</h3>
+      <span class="sub">Рынки, чьи правила разрешаются механически. Три независимые стадии, отказ по умолчанию.</span>
+    </div>
+    <div class="short" id="shortlist"></div>
+    <div class="stages" id="stages"></div>
+    <p class="note">Стадии независимы по конструкции, иначе смысла в них нет: первая смотрит на форму текста,
+    вторая ходит по названному URL и проверяет, что источник существует, третья требует написать процедуру
+    разрешения с дословными цитатами. Повторить один и тот же анализ дважды означало бы удвоить уверенность
+    без роста точности.</p>
+
   </section>
 
   <section class="block">
@@ -492,6 +529,54 @@ document.getElementById('sortbar').addEventListener('click',e=>{
   }catch(e){ /* остаёмся на вшитом снимке */ }
   renderScan();
 })();
+
+/* ---------- шортлист ---------- */
+function renderShort(d){
+  const box=document.getElementById('shortlist'), st=document.getElementById('stages');
+  if(!d){ box.innerHTML='<div class="short-empty"><div class="t">Отбор ещё не запускался</div>'+
+    '<div class="b">Файл data/shortlist.json появится после первого прогона отбора в GitHub Actions.</div></div>';
+    return; }
+  st.innerHTML='<span>Проверено: <b>'+d.checked+'</b></span>'+
+    '<span>Прошло все три стадии: <b>'+d.passed+'</b></span>'+
+    (d.model?'<span>Резолвер: <b>'+d.model+'</b></span>':'<span>Резолвер: <b>не запускался</b></span>');
+  if(!d.shortlist || !d.shortlist.length){
+    const why={};
+    (d.rejected||[]).forEach(r=>(r.fails||[]).forEach(f=>{
+      const k=f.split(':')[0]; why[k]=(why[k]||0)+1;}));
+    const top=Object.entries(why).sort((a,b)=>b[1]-a[1]).slice(0,4)
+      .map(([k,n])=>k+' — '+n).join('; ');
+    box.innerHTML='<div class="short-empty"><div class="t">Пусто</div>'+
+      '<div class="b">Ни один рынок не прошёл все три стадии. Это нормальный и частый результат, а не поломка: '+
+      'случай Бёрри редок по определению. Стабильные три-четыре рынка в неделю означали бы, что пороги поехали, '+
+      'а не что рынок стал щедрее.'+(top?'<br><br>Чаще всего отсеивало: '+top+'.':'')+'</div></div>';
+    return;
+  }
+  box.innerHTML=d.shortlist.map(r=>{
+    const m=r.market||{}, ev=r.ev||{}, rs=r.resolver||{};
+    const fav=Math.max(m.p??0,m.q2??0), c=fav+(m.cat||0)*fav*(1-fav);
+    const econ=fav?`фаворит ${ru(fav*100,2)} ¢ · доходность ${ru(100*(1-c)/c,2)} % · `+
+      `${ru(c/(1-c),1)} выигрышей на проигрыш · оборот ${mln(m.vol||0)} $`:'';
+    return `<div class="short-item">
+      <div class="short-q">${r.q}</div>
+      <div class="short-econ">${econ}</div>
+      <dl class="ev">
+        <dt>Источник</dt><dd><a href="${ev.source_url}" style="color:var(--accent)">${ev.source_url}</a> — HTTP ${ev.http}</dd>
+        <dt>Порог</dt><dd>${(ev.threshold_words||[]).map(w=>'<code>'+w+'</code>').join(' ')}</dd>
+        <dt>Даты</dt><dd>правила ${ev.latest_date_in_rules||'—'} · карточка ${ev.end_date||'—'}</dd>
+        ${rs.missing_data_rule?`<dt>Нет данных</dt><dd>${rs.missing_data_rule}</dd>`:''}
+      </dl>
+      ${Array.isArray(rs.procedure)&&rs.procedure.length?
+        '<ol class="proc">'+rs.procedure.map(p=>'<li>'+p+'</li>').join('')+'</ol>':''}
+      ${rs.comparison?`<div class="short-econ" style="margin-top:8px">проверка: ${rs.comparison}</div>`:''}
+      <div class="confirm">Машина нашла и извлекла — вердикт остаётся за вами. Прочитайте правила целиком по
+      <a href="https://gamma-api.polymarket.com/markets?slug=${r.slug}" style="color:var(--accent)">этой ссылке</a>
+      и запишите решение в <code>data/rules-read.json</code>. Прохождение трёх стадий означает «стоит потратить
+      время на чтение», а не «можно ставить».</div>
+    </div>`;
+  }).join('');
+}
+fetch('data/shortlist.json',{cache:'no-store'})
+  .then(r=>r.ok?r.json():null).then(renderShort).catch(()=>renderShort(null));
 
 /* ---------- тест на однозначность ---------- */
 const Q=[
