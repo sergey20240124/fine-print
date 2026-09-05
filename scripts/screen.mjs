@@ -131,19 +131,68 @@ const RESOLVER_PROMPT = `Ты проверяешь, можно ли разреш
 
 Задача: по тексту правил написать процедуру, которую выполнит компьютер в дату дедлайна БЕЗ единого человеческого решения.
 
-Верни СТРОГО JSON, без пояснений вокруг:
-{
-  "executable": true|false,
-  "inputs": [{"name": "...", "source_url": "...", "field": "...", "quote": "дословная цитата из правил"}],
-  "procedure": ["шаг 1", "шаг 2", "..."],
-  "comparison": "точная проверка, дающая Yes или No",
-  "missing_data_rule": "дословная цитата про отсутствие данных",
-  "human_judgment_required": null | "что именно требует человеческого решения"
-}
+Ответ давай ТОЛЬКО вызовом инструмента resolver, без текста вокруг.
 
 Правило отказа: если ХОТЬ ОДИН шаг требует оценить намерение, значимость, качественный признак или выбрать между толкованиями — ставь executable=false и назови это в human_judgment_required. Формулировки вида «наступление с намерением установить контроль», «существенное нарушение», «широко признано» неисполнимы по определению.
 
 Каждый input обязан нести дословную цитату. Цитата без соответствия тексту — отказ.`;
+
+const RESOLVER_TOOL = {
+  name: 'resolver',
+  description: 'Процедура механического разрешения рынка предсказаний.',
+  input_schema: {
+    type: 'object',
+    properties: {
+      executable: { type: 'boolean' },
+      inputs: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            name: { type: 'string' },
+            source_url: { type: 'string' },
+            field: { type: 'string' },
+            quote: { type: 'string', description: 'дословная цитата из правил' },
+          },
+          required: ['name', 'quote'],
+        },
+      },
+      procedure: { type: 'array', items: { type: 'string' } },
+      comparison: { type: 'string' },
+      missing_data_rule: { type: 'string' },
+      human_judgment_required: { type: ['string', 'null'] },
+    },
+    required: ['executable', 'inputs', 'procedure', 'comparison'],
+  },
+};
+
+/* Запасной разбор, если модель почему-то ответила текстом: ищем
+   сбалансированный объект от первой скобки, а не жадной регуляркой —
+   она цепляет фигурные скобки из окружающей прозы. */
+function extractJson(text) {
+  const fence = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+  const src = fence ? fence[1] : text;
+  // пробуем каждую открывающую скобку: первая может принадлежать прозе
+  for (let start = src.indexOf('{'); start >= 0; start = src.indexOf('{', start + 1)) {
+    let depth = 0, inStr = false, esc = false;
+    for (let i = start; i < src.length; i++) {
+      const c = src[i];
+      if (esc) { esc = false; continue; }
+      if (c === '\\') { esc = true; continue; }
+      if (c === '"') { inStr = !inStr; continue; }
+      if (inStr) continue;
+      if (c === '{') depth++;
+      else if (c === '}' && --depth === 0) {
+        try {
+          const o = JSON.parse(src.slice(start, i + 1));
+          if (o && typeof o === 'object' && 'executable' in o) return o;
+        } catch { /* не тот объект — идём к следующей скобке */ }
+        break;
+      }
+    }
+  }
+  return null;
+}
 
 async function gateC(desc) {
   if (!KEY) return { pass: false, skipped: true, fails: ['ANTHROPIC_API_KEY не задан'], ev: {} };
@@ -158,8 +207,10 @@ async function gateC(desc) {
       },
       body: JSON.stringify({
         model: MODEL,
-        max_tokens: 1500,
+        max_tokens: 4000,
         system: RESOLVER_PROMPT,
+        tools: [RESOLVER_TOOL],
+        tool_choice: { type: 'tool', name: 'resolver' },
         messages: [{ role: 'user', content: 'ПРАВИЛА РАЗРЕШЕНИЯ:\n\n' + desc }],
       }),
       signal: AbortSignal.timeout(120000),
@@ -173,13 +224,18 @@ async function gateC(desc) {
     return { pass: false, fails: ['вызов модели не удался: ' + e.message], ev: {} };
   }
 
-  const text = (body.content || []).map(c => c.text || '').join('');
-  const m = text.match(/\{[\s\S]*\}/);
-  if (!m) return { pass: false, fails: ['модель не вернула JSON'], ev: { raw: text.slice(0, 300) } };
-
-  let j;
-  try { j = JSON.parse(m[0]); }
-  catch { return { pass: false, fails: ['JSON не разобран'], ev: { raw: m[0].slice(0, 300) } }; }
+  const blocks = body.content || [];
+  const tool = blocks.find(c => c.type === 'tool_use' && c.name === 'resolver');
+  let j = tool ? tool.input : null;
+  if (!j) {
+    const text = blocks.map(c => c.text || '').join('');
+    j = extractJson(text);
+    if (!j) return {
+      pass: false,
+      fails: ['модель не вернула структуру' + (body.stop_reason === 'max_tokens' ? ' (ответ обрезан по max_tokens)' : '')],
+      ev: { stop_reason: body.stop_reason, raw: text.slice(0, 400) },
+    };
+  }
 
   const fails = [];
   if (j.executable !== true) fails.push('модель: процедура неисполнима');
@@ -189,8 +245,13 @@ async function gateC(desc) {
   else for (const i of j.inputs) {
     if (!i.quote) { fails.push('вход без цитаты: ' + (i.name || '?')); continue; }
     // цитата должна реально встречаться в правилах — защита от выдумывания
-    const norm = s => s.toLowerCase().replace(/[\s"'“”…]+/g, ' ').trim();
-    if (!norm(desc).includes(norm(i.quote).slice(0, 40)))
+    const norm = s => s.toLowerCase()
+      .replace(/[\u2010-\u2015\u2212]/g, '-')      // все виды тире
+      .replace(/[\u2018\u2019\u201c\u201d]/g, '"') // все виды кавычек
+      .replace(/[^a-z0-9а-яё"%.-]+/gi, ' ')
+      .replace(/\s+/g, ' ').trim();
+    const needle = norm(i.quote).slice(0, 30);
+    if (needle.length >= 12 && !norm(desc).includes(needle))
       fails.push('цитата не найдена в тексте правил: ' + String(i.quote).slice(0, 60));
   }
   return { pass: fails.length === 0, fails, ev: j };
@@ -239,7 +300,11 @@ async function main() {
     note: 'Пустой шортлист — нормальный и частый результат. Стабильные три-четыре рынка в неделю означают, что пороги поехали, а не что рынок стал щедрее.',
     shortlist,
     rejected: results.filter(r => !r.pass)
-      .map(({ q, slug, stage, fails }) => ({ q, slug, stage, fails })),
+      .map(({ q, slug, stage, fails, ev }) => ({
+        q, slug, stage, fails,
+        // диагностика только для поздних стадий — на A причина и так в fails
+        ...(stage === 'C' && ev ? { diag: { stop_reason: ev.stop_reason, raw: ev.raw } } : {}),
+      })),
   };
   await fs.writeFile('data/shortlist.json', JSON.stringify(out, null, 2) + '\n');
   console.log(`проверено ${results.length}, прошло ${shortlist.length}`);
