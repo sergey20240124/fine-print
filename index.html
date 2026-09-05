@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Скан рынков Polymarket со стороны фаворита и тест правил разрешения на однозначность.">
+<title>Мелкий шрифт</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<style>
+:root{color-scheme:light}
+html,body{margin:0;padding:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<style>
+:root{
+  color-scheme: light;
+  --ground:#f4f2ec; --surface:#fbfaf6; --surface-2:#efece3;
+  --ink:#16150f; --ink-2:#4d4a3f; --muted:#85806f;
+  --rule:rgba(22,21,15,.13); --rule-strong:rgba(22,21,15,.26);
+  --accent:#1f4e8c; --accent-soft:rgba(31,78,140,.10);
+  --good:#0ca30c; --warn:#b57d00; --serious:#c25a2b; --crit:#c0332f;
+  --good-bg:rgba(12,163,12,.11); --warn-bg:rgba(181,125,0,.12);
+  --serious-bg:rgba(194,90,43,.12); --crit-bg:rgba(192,51,47,.12);
+  --track:#e3dfd4;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --ground:#100f0d; --surface:#1a1917; --surface-2:#232220;
+    --ink:#f6f4ee; --ink-2:#c5c0b3; --muted:#8d8879;
+    --rule:rgba(246,244,238,.14); --rule-strong:rgba(246,244,238,.28);
+    --accent:#77a6de; --accent-soft:rgba(119,166,222,.14);
+    --good:#3cbb3c; --warn:#e0a521; --serious:#e0855c; --crit:#e05d58;
+    --good-bg:rgba(60,187,60,.15); --warn-bg:rgba(224,165,33,.15);
+    --serious-bg:rgba(224,133,92,.15); --crit-bg:rgba(224,93,88,.15);
+    --track:#302e2a;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --ground:#100f0d; --surface:#1a1917; --surface-2:#232220;
+  --ink:#f6f4ee; --ink-2:#c5c0b3; --muted:#8d8879;
+  --rule:rgba(246,244,238,.14); --rule-strong:rgba(246,244,238,.28);
+  --accent:#77a6de; --accent-soft:rgba(119,166,222,.14);
+  --good:#3cbb3c; --warn:#e0a521; --serious:#e0855c; --crit:#e05d58;
+  --good-bg:rgba(60,187,60,.15); --warn-bg:rgba(224,165,33,.15);
+  --serious-bg:rgba(224,133,92,.15); --crit-bg:rgba(224,93,88,.15);
+  --track:#302e2a;
+}
+
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1000px;margin:0 auto;padding:34px 22px 80px}
+@media(max-width:640px){.wrap{padding:22px 14px 56px}}
+
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+h1{font-size:clamp(30px,5.2vw,46px);font-weight:600;line-height:1.06;
+  letter-spacing:-.022em;margin:8px 0 0;text-wrap:balance}
+.dek{font-family:"Source Serif 4",Georgia,serif;font-size:17px;line-height:1.62;
+  color:var(--ink-2);max-width:62ch;margin:12px 0 0}
+.masthead{display:flex;flex-wrap:wrap;gap:10px 26px;align-items:baseline;
+  margin-top:20px;padding-top:14px;border-top:1px solid var(--rule);
+  font-size:12.5px;color:var(--muted)}
+.masthead b{color:var(--ink-2);font-weight:600}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+
+.premise{margin-top:30px;background:var(--surface);border:1px solid var(--rule);
+  border-left:4px solid var(--crit);padding:20px 24px}
+.premise h2{font-size:20px;font-weight:600;margin:6px 0 0;letter-spacing:-.012em}
+.premise p{font-family:"Source Serif 4",Georgia,serif;font-size:15.5px;line-height:1.6;
+  color:var(--ink-2);max-width:64ch;margin:10px 0 0}
+.premise b{color:var(--ink);font-weight:600}
+
+.block{margin-top:38px}
+.block-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;
+  padding-bottom:8px;border-bottom:1px solid var(--rule-strong)}
+.block-head h3{font-size:18px;font-weight:600;margin:0;letter-spacing:-.01em}
+.block-head .sub{font-size:12.5px;color:var(--muted);flex:1 1 220px}
+.note{font-family:"Source Serif 4",Georgia,serif;font-size:14.5px;line-height:1.6;
+  color:var(--ink-2);margin:14px 0 0;max-width:66ch}
+.note b{color:var(--ink);font-weight:600}
+
+/* --- калькулятор стороны фаворита --- */
+.calc{display:grid;grid-template-columns:minmax(260px,1fr) 1.3fr;gap:1px;
+  background:var(--rule);border:1px solid var(--rule);margin-top:16px}
+@media(max-width:780px){.calc{grid-template-columns:1fr}}
+.calc-in,.calc-out{background:var(--surface);padding:16px 18px}
+.calc-sec{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--muted);font-weight:600;margin-bottom:12px}
+.ctrl{margin-bottom:14px}
+.ctrl-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:5px}
+.ctrl-lbl{font-size:12.5px;font-weight:500;color:var(--ink-2)}
+.ctrl-val{font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:600;
+  font-variant-numeric:tabular-nums;color:var(--ink)}
+input[type=range]{width:100%;accent-color:var(--accent);height:18px;margin:0;cursor:pointer}
+input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+select{font:inherit;font-size:13px;width:100%;padding:6px 8px;background:var(--surface-2);
+  color:var(--ink);border:1px solid var(--rule-strong);border-radius:0}
+select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:14px 18px}
+.tile .k{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+  font-weight:600;line-height:1.3;min-height:26px}
+.tile .v{font-family:"IBM Plex Mono",monospace;font-size:25px;font-weight:500;
+  line-height:1.1;margin-top:3px}
+.tile .v small{font-size:12px;color:var(--muted);margin-left:2px}
+.tile .c{font-size:11.5px;color:var(--muted);margin-top:3px;line-height:1.4}
+.calc-verdict{margin-top:16px;padding-top:13px;border-top:1px solid var(--rule);
+  font-family:"Source Serif 4",Georgia,serif;font-size:14px;line-height:1.55;color:var(--ink-2)}
+.calc-verdict b{color:var(--ink);font-weight:600}
+
+/* --- таблицы --- */
+.tablewrap{overflow-x:auto;margin-top:14px}
+table{border-collapse:collapse;width:100%;font-size:12.5px;min-width:760px}
+th,td{text-align:left;padding:7px 9px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+  font-weight:600;white-space:nowrap}
+td.n{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
+td.q{max-width:280px;line-height:1.35}
+.tag{display:inline-block;font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;
+  padding:1px 5px;border:1px solid currentColor;white-space:nowrap;font-weight:600}
+.t-crit{color:var(--crit);background:var(--crit-bg)}
+.t-warn{color:var(--warn);background:var(--warn-bg)}
+.t-good{color:var(--good);background:var(--good-bg)}
+.t-mut{color:var(--muted)}
+.sortbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:14px}
+.sortbar span{font-size:11.5px;color:var(--muted);margin-right:4px}
+.sortbtn{font:inherit;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
+  padding:4px 9px;border:1px solid var(--rule-strong);background:transparent;color:var(--muted);cursor:pointer}
+.sortbtn[aria-pressed="true"]{color:var(--accent);border-color:currentColor;background:var(--accent-soft)}
+.sortbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* --- разборы --- */
+.cases{display:grid;gap:1px;background:var(--rule);border:1px solid var(--rule);margin-top:16px}
+.case{background:var(--surface);padding:17px 19px}
+.case-top{display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;justify-content:space-between}
+.case-q{font-size:14.5px;font-weight:600;line-height:1.3;max-width:52ch}
+.case-price{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--muted);white-space:nowrap}
+.quote{font-family:"IBM Plex Mono",monospace;font-size:12px;line-height:1.55;
+  background:var(--surface-2);border-left:2px solid var(--rule-strong);
+  padding:11px 13px;margin:11px 0 0;color:var(--ink-2);overflow-x:auto}
+.quote mark{background:var(--warn-bg);color:var(--ink);padding:0 2px}
+.quote mark.ok{background:var(--good-bg)}
+.case-read{font-family:"Source Serif 4",Georgia,serif;font-size:14px;line-height:1.6;
+  color:var(--ink-2);margin-top:11px;max-width:66ch}
+.case-read b{color:var(--ink);font-weight:600}
+
+/* --- тест --- */
+.testbox{margin-top:16px;border:1px solid var(--rule);background:var(--surface)}
+.testrow{display:grid;grid-template-columns:1fr auto;gap:10px 16px;align-items:center;
+  padding:12px 18px;border-bottom:1px solid var(--rule)}
+@media(max-width:640px){.testrow{grid-template-columns:1fr}}
+.testrow .lbl{font-size:13px;font-weight:600;line-height:1.35}
+.testrow .hint{font-size:11.5px;color:var(--muted);margin-top:2px;line-height:1.4}
+.opts{display:flex;gap:4px}
+.opt{font:inherit;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
+  padding:5px 12px;border:1px solid var(--rule-strong);background:transparent;
+  color:var(--muted);cursor:pointer}
+.opt:hover{border-color:var(--ink-2);color:var(--ink-2)}
+.opt:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.opt[aria-pressed="true"][data-v="y"]{background:var(--good-bg);color:var(--good);border-color:currentColor}
+.opt[aria-pressed="true"][data-v="n"]{background:var(--crit-bg);color:var(--crit);border-color:currentColor}
+.testout{padding:16px 18px;display:flex;flex-wrap:wrap;gap:16px;
+  align-items:center;justify-content:space-between}
+.testout .t{font-size:16px;font-weight:600}
+.testout .b{font-size:13px;color:var(--ink-2);max-width:58ch;margin-top:3px;line-height:1.5}
+.testout .num{font-family:"IBM Plex Mono",monospace;font-size:34px;font-weight:500;line-height:1}
+.presets{display:flex;flex-wrap:wrap;gap:6px;padding:13px 18px;border-bottom:1px solid var(--rule);
+  align-items:center}
+.presets span{font-size:11.5px;color:var(--muted);margin-right:4px}
+
+.method{margin-top:44px;padding-top:20px;border-top:1px solid var(--rule-strong)}
+.method h3{font-size:15px;font-weight:600;margin:0 0 10px}
+.method p{font-size:13.5px;color:var(--ink-2);line-height:1.6;max-width:70ch;margin:0 0 10px}
+.method ul{margin:0 0 10px;padding-left:18px;font-size:13.5px;color:var(--ink-2);
+  line-height:1.6;max-width:70ch}
+.method li{margin-bottom:5px}
+.disclaim{margin-top:22px;font-size:12px;color:var(--muted);line-height:1.55;max-width:70ch}
+</style>
+
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">Рынки предсказаний · скан и чтение правил</div>
+    <h1>Мелкий шрифт</h1>
+    <p class="dek">Спутник трекера «Горящий дом» для другой площадки. Здесь нет обязанного продавца, который держит цену страховки ниже её стоимости, — поэтому и эдж другой: не «я вижу то, чего не видит рынок», а «я прочитал правила разрешения, а рынок прочитал заголовок».</p>
+    <div class="masthead">
+      <span>Скан от <b class="mono" id="asof">—</b></span>
+      <span>Источник: <b>Polymarket Gamma API</b></span>
+      <span>Рынков: <b class="mono" id="mcount">—</b></span>
+      <span>Спорт и крипта: <b>исключены</b></span>
+    </div>
+  </header>
+
+  <section class="premise">
+    <div class="eyebrow">Посылка, на которой построена страница</div>
+    <h2>Дешёвый хвост здесь — не скидка, а наценка</h2>
+    <p>Разбор 313 972 наблюдений по 46 282 контрактам Kalshi за 2021 — апрель 2025 даёт прямой ответ: контракты дешевле 10 центов <b>теряют более 60% вложенного</b>, средняя доходность по всем контрактам около −20% до комиссий, а небольшая положительная доходность встречается только у контрактов дороже 50 центов. Поэтому эта страница не ищет дешёвые хвосты для покупки. Она смотрит на <b>сторону фаворита</b> и, главное, заставляет прочитать правила прежде, чем считать это находкой.</p>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <h3>Арифметика стороны фаворита</h3>
+      <span class="sub">Почему 96 центов — это не «почти наверняка», а требование к точности, которое почти никто не выдерживает.</span>
+    </div>
+
+    <div class="calc">
+      <div class="calc-in">
+        <div class="calc-sec">Контракт</div>
+        <div class="ctrl">
+          <div class="ctrl-top"><span class="ctrl-lbl">Цена стороны фаворита</span><span class="ctrl-val" id="v-price">96,0 ¢</span></div>
+          <input type="range" id="i-price" min="500" max="999" step="1" value="960" aria-label="Цена стороны фаворита в десятых долях цента">
+        </div>
+        <div class="ctrl">
+          <div class="ctrl-top"><span class="ctrl-lbl">Категория (комиссия тейкера)</span></div>
+          <select id="i-cat" aria-label="Категория рынка">
+            <option value="0">Геополитика — без комиссии</option>
+            <option value="0.04" selected>Политика, финансы, тех — 1,00 $ / 100 акций</option>
+            <option value="0.05">Экономика, культура, погода — 1,25 $</option>
+            <option value="0.07">Крипта — 1,75 $</option>
+          </select>
+        </div>
+        <div class="ctrl" style="margin-top:14px">
+          <div class="ctrl-top"><span class="ctrl-lbl">Размер портфеля позиций</span><span class="ctrl-val" id="v-n">20</span></div>
+          <input type="range" id="i-n" min="5" max="60" step="1" value="20" aria-label="Число одновременных позиций">
+        </div>
+        <p style="font-size:11.5px;color:var(--muted);line-height:1.45;margin:14px 0 0;padding-top:11px;border-top:1px solid var(--rule)">
+          Комиссия считается по формуле площадки: <span class="mono">C × rate × p × (1−p)</span>. Она максимальна в середине шкалы и падает к краям, но как доля вашего потенциального выигрыша остаётся почти постоянной. Мейкер платит ноль — лимитная заявка убирает эту строку целиком.
+        </p>
+      </div>
+
+      <div class="calc-out">
+        <div class="calc-sec">Что это значит</div>
+        <div class="tiles">
+          <div class="tile"><div class="k">Доходность при выигрыше</div><div class="v" id="o-ret">—</div><div class="c">на вложенное</div></div>
+          <div class="tile"><div class="k">Требуемая точность</div><div class="v" id="o-be">—</div><div class="c">чтобы выйти в ноль</div></div>
+          <div class="tile"><div class="k">Выигрышей на один проигрыш</div><div class="v" id="o-wpl">—</div><div class="c">просто чтобы не потерять</div></div>
+          <div class="tile"><div class="k">Проигрышей выдержит</div><div class="v" id="o-tol">—</div><div class="c" id="o-tolc">—</div></div>
+        </div>
+        <div class="calc-verdict" id="o-verdict">—</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <h3>Скан</h3>
+      <span class="sub">Открытые рынки с оборотом от 200 тыс. $, кроме спорта и крипты. Колонки посчитаны для покупки стороны фаворита.</span>
+    </div>
+    <div class="sortbar" id="sortbar">
+      <span>Сортировка:</span>
+      <button class="sortbtn" type="button" data-s="ret" aria-pressed="true">по доходности</button>
+      <button class="sortbtn" type="button" data-s="vol" aria-pressed="false">по обороту</button>
+      <button class="sortbtn" type="button" data-s="days" aria-pressed="false">по сроку</button>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr>
+          <th>Рынок</th><th>Дешёвая сторона</th><th>Сторона фаворита</th><th>Доходность</th>
+          <th>Выигр. / проигр.</th><th>Оборот</th><th>Спред</th><th>Разрешение</th><th>Флаг</th>
+        </tr></thead>
+        <tbody id="scan-body"></tbody>
+      </table>
+    </div>
+    <p class="note" id="scan-note"></p>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <h3>Три правила разрешения из этого же скана</h3>
+      <span class="sub">Цитаты дословные. Разница между ними — вся суть страницы.</span>
+    </div>
+    <div class="cases">
+
+      <div class="case">
+        <div class="case-top">
+          <div class="case-q">Вернётся ли трафик Ормузского пролива к норме до 31 декабря?</div>
+          <div class="case-price mono">хвост 26,5 ¢ · оборот 10,4 млн $</div>
+        </div>
+        <div class="quote">…resolve to "Yes" if <mark class="ok">IMF Portwatch</mark> publishes a <mark class="ok">7-day moving average of transit calls ("Arrivals of Ships")</mark> for the Strait of Hormuz <mark class="ok">equal to or above 60</mark> for any date between market creation and December 31, 2026… Revisions to previously published data points made within this market's timeframe will be considered… <mark class="ok">If no data has been published for the final date of the specified period within 14 calendar days (ET) after the end of that period, this market will resolve based on data published up to that point.</mark></div>
+        <div class="case-read"><b>Случай Бёрри.</b> Назван источник вплоть до URL, назван показатель, назван порог, описано поведение при пересмотре данных, при ошибках в данных и при их отсутствии. Интерпретировать нечего — исход определяется числом на конкретной странице. Толпа при этом торгует вопрос «нормализуется ли обстановка в проливе», а контракт разрешается семидневной средней числа судозаходов. Это ровно то расхождение между меткой и содержанием, за чтение которого платят.</div>
+      </div>
+
+      <div class="case">
+        <div class="case-top">
+          <div class="case-q">Вторгнется ли Китай на Тайвань до конца 2026 года?</div>
+          <div class="case-price mono">хвост 3,65 ¢ · оборот 40,6 млн $</div>
+        </div>
+        <div class="quote">…resolve to "Yes" if China commences a <mark>military offensive intended to establish control</mark> over <mark>any portion</mark> of the Republic of China (Taiwan)… <mark>uninhabited islands will not qualify</mark>. The resolution source… will be official confirmation by China, Taiwan, the United Nations, or any permanent member of the UN Security Council, <mark>however a consensus of credible reporting will also be used</mark>.</div>
+        <div class="case-read"><b>Случай UMA.</b> «Наступление с намерением установить контроль» — намерение неверифицируемо. Блокада, карантин, захват Кинмена, инцидент вокруг необитаемой скалы попадают в серую зону по построению. И главное — оговорка про «консенсус достоверных сообщений» превращает формально названный источник в запасной вход для интерпретации. Вы ставите не на событие, а на то, как проголосуют держатели токена. Это не эдж, это неоцениваемый риск, который снаружи выглядит точно так же, как эдж.</div>
+      </div>
+
+      <div class="case">
+        <div class="case-top">
+          <div class="case-q">Кто станет следующим премьер-министром Эфиопии?</div>
+          <div class="case-price mono">хвост 0,65 ¢ · оборот 83,5 млн $ · <span style="color:var(--crit)">дата в шапке прошла</span></div>
+        </div>
+        <div class="quote">General elections are scheduled to be held in Ethiopia on <mark>June 1, 2026</mark>… the individual must be officially appointed and <mark>sworn in</mark> as Prime Minister. Any <mark>interim or caretaker</mark> Prime Minister will not count… <mark>If no such Prime Minister takes office by December 31, 2028</mark>, 11:59 PM ET, this market will resolve to "Other".</div>
+        <div class="case-read"><b>Ловушка, и самая наглядная из трёх.</b> В шапке рынка стоит 1 июня 2026 года — дата выборов. В правилах стоит 31 декабря 2028 года — предельный срок разрешения. Дата уже прошла, рынок открыт, и деньги в нём заперты потенциально ещё на два с лишним года ради 0,65% доходности на стороне фаворита. Заголовок сказал «июнь», правила сказали «до 2028-го». Никакого обмана здесь нет: всё написано в описании, просто оборот в 83 миллиона долларов набрался у людей, которые смотрели на шапку.</div>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <h3>Тест на однозначность</h3>
+      <span class="sub">Пять вопросов к тексту правил. Отличают случай, где вам платят за внимательность, от случая, где вы записываетесь на голосование.</span>
+    </div>
+    <div class="testbox">
+      <div class="presets">
+        <span>Загрузить пример:</span>
+        <button class="sortbtn" type="button" data-p="hormuz">Ормуз</button>
+        <button class="sortbtn" type="button" data-p="taiwan">Тайвань</button>
+        <button class="sortbtn" type="button" data-p="ethiopia">Эфиопия</button>
+      </div>
+      <div id="test-rows"></div>
+      <div class="testout">
+        <div>
+          <div class="t" id="test-title">—</div>
+          <div class="b" id="test-body">—</div>
+        </div>
+        <div class="num" id="test-score">—</div>
+      </div>
+    </div>
+    <p class="note">Простой критерий поверх всех пяти: если после чтения правил вы можете назвать конкретный документ или число, которое однозначно определит исход, — это первый случай. Если ответ звучит как «ну по смыслу же очевидно, что», — второй. Чем изощрённее вы разглядели двусмысленность, тем ближе вы к ставке на исход голосования, а не события.</p>
+  </section>
+
+  <section class="method">
+    <h3>Методика и её границы</h3>
+    <p>Данные тянутся из публичного Gamma API Polymarket: открытые рынки с оборотом от 200 тыс. долларов и датой разрешения в пределах текущего года, без спорта и крипты. Для каждого считается экономика покупки стороны фаворита с учётом комиссии тейкера по формуле площадки.</p>
+    <ul>
+      <li><b>Это не список рекомендаций.</b> Высокая доходность в таблице почти всегда означает, что рынок считает исход реально возможным, а не что толпа ошиблась. Колонка «выигрышей на проигрыш» здесь важнее колонки доходности.</li>
+      <li><b>Корреляция не показана и является главным риском.</b> Двадцать позиций на стороне фаворита в геополитике — это не двадцать независимых ставок: одно событие разрешает против вас сразу несколько. Калькулятор считает независимый случай, то есть даёт оптимистичную оценку.</li>
+      <li><b>Риск оракула не количественный.</b> Разрешение споров идёт голосованием держателей токена UMA, и на площадке были задокументированные случаи, включая то, что она сама назвала governance-атакой. Никакая колонка это не отражает — только чтение правил.</li>
+      <li><b>Даты в шапке рынка не равны датам из правил.</b> Пример с Эфиопией не исключение, а типичный случай. Колонка «Разрешение» показывает дату из API; настоящий срок ищется в тексте описания.</li>
+      <li><b>Цены — снимок на момент скана</b> и на тонких рынках могут отличаться от исполнимых. Спред здесь не показан.</li>
+    </ul>
+    <p class="disclaim">Аналитический инструмент, не инвестиционная рекомендация и не призыв торговать на рынках предсказаний. Доступность площадки, налоговый режим и требования к верификации различаются по юрисдикциям и проверяются самостоятельно. Эмпирика по доходности контрактов взята из работы по Kalshi и переносится на Polymarket по аналогии, а не по прямому измерению.</p>
+  </section>
+</div>
+
+<script>
+const ASOF="5 сентября 2026";
+let TODAY=new Date(new Date().toISOString().slice(0,10)+"T00:00:00Z");
+
+/* p — цена дешёвой стороны; q — цена стороны фаворита; cat — ставка комиссии */
+const MK_FALLBACK=[
+ {q:'Кто станет следующим премьером Эфиопии — Adanech Abiebie',p:0.0065,q2:0.9935,vol:83454458,end:'2026-06-01',cat:0.04,flag:'дата прошла'},
+ {q:'Кто станет следующим премьером Эфиопии — Gedion Timothewos',p:0.0075,q2:0.9925,vol:55933718,end:'2026-06-01',cat:0.04,flag:'дата прошла'},
+ {q:'Кто станет следующим премьером Эфиопии — Shimelis Abdisa',p:0.0025,q2:0.9975,vol:41422322,end:'2026-06-01',cat:0.04,flag:'дата прошла'},
+ {q:'Вторгнется ли Китай на Тайвань до конца 2026',p:0.0365,q2:0.9635,vol:40642186,end:'2026-12-31',cat:0,flag:'правила размыты'},
+ {q:'Будет ли Richard Grenell лидером Венесуэлы на конец 2026',p:0.0005,q2:0.9995,vol:32790623,end:'2026-12-31',cat:0,flag:''},
+ {q:'Кто станет следующим премьером Эфиопии — Belete Molla',p:0.004,q2:0.996,vol:32288756,end:'2026-06-01',cat:0.04,flag:'дата прошла'},
+ {q:'Снизит ли ФРС ставку на 25 бп в сентябре 2026',p:0.0035,q2:0.9965,vol:30264592,end:'2026-09-16',cat:0.04,flag:''},
+ {q:'Кто станет следующим премьером Эфиопии — Berhanu Nega',p:0.007,q2:0.993,vol:29699561,end:'2026-06-01',cat:0.04,flag:'дата прошла'},
+ {q:'Кто станет следующим премьером Эфиопии — Demeke Mekonnen',p:0.0025,q2:0.9975,vol:29298548,end:'2026-06-01',cat:0.04,flag:'дата прошла'},
+ {q:'Будет ли Frank Donovan лидером Венесуэлы на конец 2026',p:0.0015,q2:0.9985,vol:25809843,end:'2026-12-31',cat:0,flag:''},
+ {q:'Оставит ли ФРС ставку без изменений в сентябре 2026',p:0.505,q2:0.495,vol:23022895,end:'2026-09-16',cat:0.04,flag:'монетка'},
+ {q:'Повысит ли ФРС ставку на 25 бп в сентябре 2026',p:0.495,q2:0.505,vol:18468860,end:'2026-09-16',cat:0.04,flag:'монетка'},
+ {q:'Вернётся ли трафик Ормузского пролива к норме до 31 декабря',p:0.265,q2:0.735,vol:10439020,end:'2026-12-31',cat:0,flag:'правила ясны'},
+ {q:'Победит ли Carlos Roberto Massa Júnior на выборах в Бразилии',p:0.0005,q2:0.9995,vol:10429596,end:'2026-10-04',cat:0.04,flag:''},
+ {q:'Победит ли Michelle Bolsonaro на выборах в Бразилии',p:0.0005,q2:0.9995,vol:10336765,end:'2026-10-04',cat:0.04,flag:''},
+ {q:'Победит ли Лула на выборах в Бразилии',p:0.555,q2:0.445,vol:9763513,end:'2026-10-04',cat:0.04,flag:''},
+ {q:'Победит ли Flávio Bolsonaro на выборах в Бразилии',p:0.3985,q2:0.6015,vol:9696484,end:'2026-10-04',cat:0.04,flag:''},
+ {q:'Будет ли Pete Hegseth лидером Венесуэлы на конец 2026',p:0.0015,q2:0.9985,vol:9186719,end:'2026-12-31',cat:0,flag:''},
+ {q:'Получит ли «Единая Россия» большинство мест на выборах в Думу',p:0.69,q2:0.31,vol:9104690,end:'2026-09-30',cat:0.04,flag:''},
+ {q:'Повысит ли ФРС ставку хотя бы раз в 2026',p:0.705,q2:0.295,vol:8750825,end:'2026-12-09',cat:0.04,flag:''},
+];
+let MK = MK_FALLBACK;
+
+const ru=(v,d)=>v.toLocaleString('ru-RU',{minimumFractionDigits:d,maximumFractionDigits:d});
+const cents=v=>ru(v*100,2).replace(/,00$/,'')+' ¢';
+const mln=v=>ru(v/1e6,1)+' млн';
+/* стоимость одной акции стороны фаворита с комиссией */
+const cost=(q,rate)=>q+rate*q*(1-q);
+
+document.getElementById('asof').textContent=ASOF;
+document.getElementById('mcount').textContent=MK.length;
+
+/* ---------- калькулятор ---------- */
+function calc(){
+  const q=+document.getElementById('i-price').value/1000;
+  const rate=+document.getElementById('i-cat').value;
+  const N=+document.getElementById('i-n').value;
+  document.getElementById('v-price').textContent=ru(q*100,1)+' ¢';
+  document.getElementById('v-n').textContent=N;
+
+  const c=cost(q,rate);
+  const ret=(1-c)/c;                 // доходность на вложенное при выигрыше
+  const be=c;                        // требуемая вероятность
+  const wpl=c/(1-c);                 // выигрышей на один проигрыш
+  const tol=Math.floor(N*(1-c));     // сколько проигрышей из N выдержит портфель
+
+  document.getElementById('o-ret').innerHTML=ru(ret*100,2)+'<small> %</small>';
+  document.getElementById('o-be').innerHTML=ru(be*100,2)+'<small> %</small>';
+  const w=document.getElementById('o-wpl');
+  w.textContent=wpl>=100?Math.round(wpl):ru(wpl,1);
+  w.style.color= wpl>50?'var(--crit)': wpl>15?'var(--serious)': wpl>6?'var(--warn)':'var(--good)';
+  const t=document.getElementById('o-tol');
+  t.textContent=tol;
+  t.style.color= tol===0?'var(--crit)': tol===1?'var(--serious)':'var(--warn)';
+  document.getElementById('o-tolc').textContent= tol===0
+    ? 'первый же проигрыш уводит портфель в минус'
+    : 'из '+N+' позиций, дальше портфель в минусе';
+
+  const v=document.getElementById('o-verdict');
+  const lossEats=Math.ceil(1/ret);
+  if(tol===0){
+    v.innerHTML='<b>Портфель из '+N+' таких позиций не выдерживает ни одного проигрыша.</b> Прибыль от всех остальных не покрывает одну потерю: чтобы выйти в ноль, нужно '+
+      Math.round(wpl)+' выигрышей на каждый проигрыш, а позиций всего '+N+'.';
+  } else {
+    v.innerHTML='<b>Один проигрыш съедает прибыль '+lossEats+' выигрышных позиций.</b> Портфель из '+N+
+      ' выдерживает '+tol+(tol===1?' проигрыш':' проигрыша(-ей)')+
+      ' и уходит в минус на следующем. И это при допущении независимости — которого в одной категории не бывает.';
+  }
+}
+['i-price','i-cat','i-n'].forEach(id=>
+  document.getElementById(id).addEventListener('input',calc));
+calc();
+
+/* ---------- скан ---------- */
+let SORT='ret';
+function days(end){return Math.round((new Date(end+'T00:00:00Z')-TODAY)/86400000);}
+function rows(){
+  const list=MK.map(m=>{
+    // фаворит — та сторона, что дороже половины, независимо от того, YES это или NO
+    const fav=Math.max(m.p,m.q2), cheap=Math.min(m.p,m.q2);
+    const c=cost(fav,m.cat);
+    return {...m, fav, cheap, c, ret:(1-c)/c, wpl:c/(1-c), d:days(m.end)};
+  });
+  list.sort((a,b)=> SORT==='ret'? b.ret-a.ret : SORT==='vol'? b.vol-a.vol : a.d-b.d);
+  return list;
+}
+function renderScan(){
+  document.getElementById('scan-body').innerHTML=rows().map(m=>{
+    const late=m.d<0;
+    const flagCls = m.flag==='правила ясны'?'t-good'
+                  : m.flag==='дата прошла'?'t-crit'
+                  : m.flag==='правила размыты'?'t-warn':'t-mut';
+    const retCol = m.ret>=0.15?'var(--good)': m.ret>=0.04?'var(--warn)':'var(--crit)';
+    return `<tr>
+      <td class="q">${m.q}</td>
+      <td class="n">${cents(m.cheap)}</td>
+      <td class="n">${cents(m.fav)}</td>
+      <td class="n" style="color:${retCol}">${ru(m.ret*100,2)} %</td>
+      <td class="n">${m.wpl>=100?Math.round(m.wpl):ru(m.wpl,1)}</td>
+      <td class="n">${mln(m.vol)} $</td>
+      <td class="n">${m.spread!=null?ru(m.spread*100,1)+' ¢':'—'}</td>
+      <td class="n"${late?' style="color:var(--crit)"':''}>${m.end}${late?' ⚠':''}</td>
+      <td>${m.flag?`<span class="tag ${flagCls}">${m.flag}</span>`:'<span class="tag t-mut">—</span>'}</td>
+    </tr>`;
+  }).join('');
+
+  const r=rows();
+  const top=r.filter(m=>m.vol>2.5e7);
+  const avgTop=top.reduce((s,m)=>s+m.ret,0)/top.length;
+  document.getElementById('scan-note').innerHTML=
+    'Обратите внимание на связь между двумя колонками. У ' + top.length +
+    ' рынков с оборотом выше 25 млн $ средняя доходность стороны фаворита — <b>' + ru(avgTop*100,2) +
+    ' %</b>, то есть деньги толпы сосредоточены именно там, где сторона фаворита платит меньше всего. ' +
+    'Это и есть смещение из посылки, увиденное с обратной стороны: дешёвые хвосты не потому дёшевы, что их недооценили, а потому что их активно покупают.';
+}
+document.getElementById('sortbar').addEventListener('click',e=>{
+  const b=e.target.closest('.sortbtn'); if(!b) return;
+  SORT=b.dataset.s;
+  document.querySelectorAll('#sortbar .sortbtn').forEach(x=>
+    x.setAttribute('aria-pressed', x===b?'true':'false'));
+  renderScan();
+});
+
+/* Данные грузятся из data/markets.json, который раз в сутки пересобирает
+   GitHub Actions. Если файла нет или страница открыта как локальный файл —
+   остаётся вшитый снимок MK_FALLBACK, и страница всё равно работает. */
+(async ()=>{
+  try{
+    const r=await fetch('data/markets.json',{cache:'no-store'});
+    if(r.ok){
+      const j=await r.json();
+      if(Array.isArray(j.markets) && j.markets.length){
+        MK=j.markets;
+        if(j.asof) document.getElementById('asof').textContent=j.asof;
+        document.getElementById('mcount').textContent=MK.length;
+      }
+    }
+  }catch(e){ /* остаёмся на вшитом снимке */ }
+  renderScan();
+})();
+
+/* ---------- тест на однозначность ---------- */
+const Q=[
+ {k:'src',lbl:'Назван конкретный источник или документ, определяющий исход',
+  hint:'Не «официальные данные», а конкретное издание, ведомство, страница'},
+ {k:'thr',lbl:'Задан измеримый порог или критерий без оценочных слов',
+  hint:'Число, дата, статус — а не «существенно», «фактически», «с намерением»'},
+ {k:'date',lbl:'Дата в шапке рынка совпадает с предельным сроком из правил',
+  hint:'Расхождение означает, что капитал заперт дольше, чем вы думали'},
+ {k:'miss',lbl:'Описано, что происходит при отсутствии или пересмотре данных',
+  hint:'Есть правило по умолчанию, а не молчание'},
+ {k:'esc',lbl:'В тексте НЕТ запасного входа для интерпретации',
+  hint:'Оговорки вида «консенсус достоверных сообщений» открывают дорогу голосованию'},
+];
+const PRESETS={
+ hormuz:  {src:'y',thr:'y',date:'y',miss:'y',esc:'y'},
+ taiwan:  {src:'y',thr:'n',date:'y',miss:'n',esc:'n'},
+ ethiopia:{src:'y',thr:'y',date:'n',miss:'y',esc:'n'},
+};
+let T={...PRESETS.hormuz};
+
+document.getElementById('test-rows').innerHTML=Q.map(q=>`
+ <div class="testrow">
+   <div><div class="lbl">${q.lbl}</div><div class="hint">${q.hint}</div></div>
+   <div class="opts" role="group" aria-label="${q.lbl}">
+     <button type="button" class="opt" data-k="${q.k}" data-v="y" aria-pressed="false">Да</button>
+     <button type="button" class="opt" data-k="${q.k}" data-v="n" aria-pressed="false">Нет</button>
+   </div>
+ </div>`).join('');
+
+function renderTest(){
+  document.querySelectorAll('#test-rows .opt').forEach(b=>
+    b.setAttribute('aria-pressed', T[b.dataset.k]===b.dataset.v?'true':'false'));
+  const yes=Q.filter(q=>T[q.k]==='y').length;
+  const el=document.getElementById('test-score');
+  const t=document.getElementById('test-title'), b=document.getElementById('test-body');
+  el.textContent=yes+'/5';
+  const noDate = T.date==='n', noEsc = T.esc==='n';
+  if(yes===5){
+    el.style.color='var(--good)'; t.textContent='Случай Бёрри';
+    b.textContent='Правила самодостаточны: исход определяется документом, а не мнением. Если рынок при этом торгует заголовок, расхождение между ними и есть то, за что здесь платят.';
+  } else if(noEsc && yes<=3){
+    el.style.color='var(--crit)'; t.textContent='Случай UMA';
+    b.textContent='Оценочные формулировки плюс запасной вход для интерпретации. Исход определит голосование держателей токена, а не событие. Это не преимущество, а неоцениваемый риск, который снаружи выглядит как преимущество.'
+      + (noDate?' Вдобавок предельный срок из правил не совпадает с датой на карточке — капитал будет заперт дольше, чем показывает шапка.':'');
+  } else if(noDate){
+    el.style.color='var(--serious)'; t.textContent='Срок не тот, что в шапке';
+    b.textContent='Правила задают предельный срок дальше, чем дата на карточке рынка. Прежде чем считать доходность, пересчитайте её на реальный срок блокировки капитала — обычно после этого считать становится нечего.';
+  } else {
+    el.style.color='var(--warn)'; t.textContent='Серая зона';
+    b.textContent='Часть правил однозначна, часть оставляет место интерпретации. Практическое правило: если хотя бы один существенный элемент исхода решается мнением, считайте это случаем UMA, а не пограничным.';
+  }
+}
+document.getElementById('test-rows').addEventListener('click',e=>{
+  const btn=e.target.closest('.opt'); if(!btn) return;
+  T[btn.dataset.k]=btn.dataset.v; renderTest();
+});
+document.querySelector('.presets').addEventListener('click',e=>{
+  const b=e.target.closest('.sortbtn'); if(!b) return;
+  T={...PRESETS[b.dataset.p]}; renderTest();
+});
+renderTest();
+</script>
+
+</body>
+</html>
