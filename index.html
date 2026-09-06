@@ -587,6 +587,7 @@ function renderShort(d){
         <dt>Источник</dt><dd><a href="${ev.source_url}" style="color:var(--accent)">${ev.source_url}</a> — HTTP ${ev.http}</dd>
         <dt>Порог</dt><dd>${(ev.threshold_words||[]).map(w=>'<code>'+w+'</code>').join(' ')}</dd>
         <dt>Даты</dt><dd>правила ${ev.latest_date_in_rules||'—'} · карточка ${ev.end_date||'—'}</dd>
+        ${r.attention?`<dt>Внимание</dt><dd>заброшенность ${ru(r.attention.neglect*100,0)} из 100 — ${r.attention.why}</dd>`:''}
         ${rs.missing_data_rule?`<dt>Нет данных</dt><dd>${rs.missing_data_rule}</dd>`:''}
       </dl>
       ${Array.isArray(r.attrs)&&r.attrs.length?

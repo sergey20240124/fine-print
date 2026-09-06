@@ -10,9 +10,17 @@
  */
 
 const API = 'https://gamma-api.polymarket.com/markets';
-const KEEP = 20;                 // сколько рынков оставить в скане
-const MIN_VOLUME = 200_000;
+const KEEP = 20;                 // сколько рынков показать на странице
+const MIN_VOLUME = 200_000;      // порог для витрины
 const HORIZON_DAYS = 400;        // не берём разрешение дальше этого срока
+
+/* Пул для отбора — отдельная сущность, и намеренно.
+   Витрина показывает крупнейшие по обороту рынки: там видно, где деньги
+   толпы. Но отбирать случай Бёрри среди самых разобранных контрактов
+   бессмысленно: их правила прочитали все. Пул берёт порог на порядок ниже
+   и не ограничен двадцаткой — заброшенные рынки живут именно там. */
+const POOL_KEEP = 300;
+const POOL_MIN_VOLUME = 20_000;
 
 /* Ставки комиссии тейкера по категориям площадки.
    Категории в API на уровне рынка нет, поэтому: сначала ручное
@@ -34,7 +42,7 @@ const FIN = /\b(fed|interest rate|inflation|cpi|recession|gdp|unemployment|treas
 const POL = /\b(election|president|prime minister|senate|congress|governor|parliament|impeach|nominee)\b/i;
 
 async function getPage(offset) {
-  const url = `${API}?closed=false&volume_num_min=${MIN_VOLUME}` +
+  const url = `${API}?closed=false&volume_num_min=${POOL_MIN_VOLUME}` +
               `&order=volumeNum&ascending=false&limit=50&offset=${offset}`;
   const r = await fetch(url, { headers: { 'User-Agent': 'fine-print-tracker' } });
   if (!r.ok) throw new Error(`Gamma API ${r.status} на offset=${offset}`);
@@ -72,7 +80,8 @@ async function main() {
   try { rulesRead = JSON.parse(await fs.readFile('data/rules-read.json', 'utf8')); }
   catch { console.log('data/rules-read.json не найден — флаги про правила будут пустыми'); }
 
-  const pages = await Promise.all([getPage(0), getPage(50), getPage(100)]);
+  const pages = await Promise.all(
+    Array.from({ length: 12 }, (_, i) => getPage(i * 50)));   // до 600 рынков
   const all = pages.flat();
   console.log(`получено рынков: ${all.length}`);
 
@@ -103,6 +112,10 @@ async function main() {
     rows.push({
       q: manual.title_ru || q,
       slug,
+      /* описание кладём сразу: иначе отбор делает по запросу на каждый
+         рынок пула, то есть триста лишних обращений к API за прогон */
+      desc: m.description || '',
+      createdAt: m.createdAt || null,
       p, q2,
       vol: Math.round(Number(m.volumeNum) || 0),
       end,
@@ -114,7 +127,9 @@ async function main() {
   }
 
   rows.sort((a, b) => b.vol - a.vol);
-  const markets = rows.slice(0, KEEP);
+  const markets = rows.filter(r => r.vol >= MIN_VOLUME).slice(0, KEEP)
+    .map(({ desc, createdAt, ...rest }) => rest);   // витрине описания не нужны
+  const pool = rows.slice(0, POOL_KEEP);
   if (!markets.length) throw new Error('после фильтрации не осталось рынков — не перезаписываю данные');
 
   const out = {
@@ -127,6 +142,16 @@ async function main() {
   };
   await fs.writeFile('data/markets.json', JSON.stringify(out, null, 2) + '\n');
   console.log(`записано ${markets.length} рынков в data/markets.json`);
+
+  await fs.writeFile('data/pool.json', JSON.stringify({
+    generated: now.toISOString(),
+    min_volume: POOL_MIN_VOLUME,
+    kept: pool.length,
+    scanned: all.length,
+    note: 'Пул для отбора. Порог по обороту на порядок ниже витрины: случай Бёрри ищется среди незамеченных рынков, а не среди самых разобранных.',
+    markets: pool,
+  }, null, 2) + '\n');
+  console.log(`записано ${pool.length} рынков в data/pool.json (из ${all.length} просмотренных)`);
 }
 
 main().catch(e => { console.error('ОШИБКА:', e.message); process.exit(1); });

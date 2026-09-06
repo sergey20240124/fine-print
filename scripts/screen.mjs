@@ -17,6 +17,11 @@
 
 import fs from 'node:fs/promises';
 import { gateA, gateB, gateC } from './gates.mjs';
+import { attention } from './attention.mjs';
+
+/* Стадия C платная, пул большой — платим только за самых заброшенных.
+   Порядок обхода задаёт вторая ось, и это её основная работа. */
+const C_LIMIT = Number(process.env.SCREEN_LIMIT || 12);
 
 const GAMMA = 'https://gamma-api.polymarket.com/markets';
 
@@ -29,14 +34,27 @@ async function fetchFull(slug) {
 }
 
 async function main() {
-  const scan = JSON.parse(await fs.readFile('data/markets.json', 'utf8'));
-  const results = [];
+  /* Отбираем по пулу, а не по витрине. Витрина — двадцать крупнейших по
+     обороту, то есть ровно самые разобранные контракты: искать случай
+     Бёрри там бессмысленно по построению. */
+  let pool;
+  try {
+    pool = JSON.parse(await fs.readFile('data/pool.json', 'utf8')).markets;
+  } catch {
+    console.log('data/pool.json нет — работаю по витрине');
+    pool = JSON.parse(await fs.readFile('data/markets.json', 'utf8')).markets;
+  }
 
-  for (const m of scan.markets) {
+  /* Ворота A и B бесплатны, их гоняем по всему пулу. */
+  const results = [];
+  const survivors = [];
+
+  for (const m of pool) {
     const base = { q: m.q, slug: m.slug };
     if (!m.slug) { results.push({ ...base, stage: 'A', pass: false, fails: ['нет slug'] }); continue; }
 
-    const full = await fetchFull(m.slug);
+    /* Описание уже в пуле — доп. запрос только если его там нет. */
+    let full = m.desc ? { description: m.desc, createdAt: m.createdAt } : await fetchFull(m.slug);
     const desc = full?.description || '';
     if (!desc) { results.push({ ...base, stage: 'A', pass: false, fails: ['нет описания'] }); continue; }
 
@@ -46,9 +64,32 @@ async function main() {
     const b = await gateB(a.ev.source_url, desc);
     if (!b.pass) { results.push({ ...base, stage: 'B', pass: false, fails: b.fails, ev: { ...a.ev, ...b.ev } }); continue; }
 
-    /* Метаданные подаются отдельно: они доступны машине, даже если правила их
-       не повторяют. Без этого резолвер справедливо жалуется на «дату создания
-       рынка, которой в тексте нет» — а это ограничение чтения, не контракта. */
+    /* Ненайденный термин источника — предупреждение, а не отказ: стадия B
+       не может отличить «поля нет» от «поле за запросом». */
+    const attrs = [...a.attrs];
+    if (b.ev.terms_missing)
+      attrs.push({ key: 'terms', note: 'названный в правилах термин в источнике не найден: '
+                                       + (b.ev.quoted_terms || []).join(', ') });
+
+    survivors.push({ base, m, full, desc, a, b, attrs, att: attention(m) });
+  }
+
+  /* Вторая ось решает, за кого платим. Разобранный рынок может быть сколь
+     угодно механическим — читать его правила бессмысленно, их прочитали все. */
+  survivors.sort((x, y) => y.att.score - x.att.score);
+  const paid = survivors.slice(0, C_LIMIT);
+  console.log(`ворота прошли ${survivors.length}, в резолвер уходит ${paid.length}`);
+
+  for (const s of survivors.slice(C_LIMIT))
+    results.push({ ...s.base, stage: 'C', pass: false, attention: s.att,
+                   fails: ['не попал в лимит стадии C: слишком много внимания к рынку'],
+                   ev: { ...s.a.ev, ...s.b.ev } });
+
+  for (const s of paid) {
+    const { base, m, full, desc, a, b, attrs, att } = s;
+    /* Метаданные подаются отдельно: доступны машине, даже если правила их не
+       повторяют. Иначе резолвер справедливо жалуется на дату, которой в
+       тексте нет, — а это ограничение чтения, не контракта. */
     const c = await gateC(desc, {
       slug: m.slug,
       created_at: full.createdAt,
@@ -56,16 +97,10 @@ async function main() {
       end_date: m.end,
     });
 
-    /* Ненайденный термин источника — тоже предупреждение, а не отказ:
-       стадия B не может отличить «поля нет» от «поле за запросом». */
-    const attrs = [...a.attrs];
-    if (b.ev.terms_missing)
-      attrs.push({ key: 'terms', note: 'названный в правилах термин в источнике не найден: '
-                                       + (b.ev.quoted_terms || []).join(', ') });
-
     results.push({
       ...base, stage: 'C', pass: c.pass, skipped: c.skipped || false,
-      fails: c.fails, attrs, ev: { ...a.ev, ...b.ev }, resolver: c.ev,
+      fails: c.fails, attrs, attention: att,
+      ev: { ...a.ev, ...b.ev }, resolver: c.ev,
       market: { p: m.p, q2: m.q2, vol: m.vol, end: m.end, cat: m.cat, spread: m.spread },
     });
   }
@@ -75,9 +110,11 @@ async function main() {
     generated: new Date().toISOString(),
     model: process.env.ANTHROPIC_API_KEY ? (process.env.MODEL || 'claude-opus-5') : null,
     checked: results.length,
+    gates_passed: results.filter(r => r.stage === 'C').length,
+    resolver_calls: Math.min(C_LIMIT, results.filter(r => r.stage === 'C' && r.resolver).length),
     passed: shortlist.length,
     note: 'Пустой шортлист — нормальный результат. Достижима ли планка вообще, отвечает scripts/calibrate.mjs, а не догадки. Ворота жёсткие только по трём критериям; остальное — атрибуты, они показываются на карточке, но не отсеивают.',
-    shortlist,
+    shortlist: shortlist.sort((a, b) => (b.attention?.score || 0) - (a.attention?.score || 0)),
     rejected: results.filter(r => !r.pass).map(({ q, slug, stage, fails, ev }) => ({
       q, slug, stage, fails,
       ...(stage !== 'A' && ev ? { diag: {

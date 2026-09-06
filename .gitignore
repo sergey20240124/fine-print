@@ -2,3 +2,6 @@ node_modules/
 .DS_Store
 Thumbs.db
 *.log
+
+# промежуточный файл отбора: живёт внутри прогона
+data/pool.json
