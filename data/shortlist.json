@@ -1,10 +1,297 @@
 {
-  "generated": "2026-09-06T08:41:44.645Z",
+  "generated": "2026-09-06T09:04:23.795Z",
   "model": "claude-opus-5",
   "checked": 20,
-  "passed": 0,
+  "passed": 3,
   "note": "Пустой шортлист — нормальный результат. Достижима ли планка вообще, отвечает scripts/calibrate.mjs, а не догадки. Ворота жёсткие только по трём критериям; остальное — атрибуты, они показываются на карточке, но не отсеивают.",
-  "shortlist": [],
+  "shortlist": [
+    {
+      "q": "Will the Fed decrease interest rates by 25 bps after the September 2026 meeting?",
+      "slug": "will-the-fed-decrease-interest-rates-by-25-bps-after-the-september-2026-meeting-586",
+      "stage": "C",
+      "pass": true,
+      "skipped": false,
+      "fails": [],
+      "attrs": [
+        {
+          "key": "threshold",
+          "note": "нет сравнения с порогом"
+        },
+        {
+          "key": "missing",
+          "note": "не описано, что делать при отсутствии данных"
+        },
+        {
+          "key": "terms",
+          "note": "названный в правилах термин в источнике не найден: No change"
+        }
+      ],
+      "ev": {
+        "uma_statuses": "[]",
+        "escape_found": [],
+        "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+        "threshold_words": [],
+        "missing_data_words": [],
+        "end_date": "2026-09-16",
+        "latest_date_in_rules": null,
+        "http": 200,
+        "content_type": "text/html",
+        "bytes": 164826,
+        "is_data": false,
+        "is_shell": false,
+        "quoted_terms": [
+          "No change"
+        ],
+        "terms_found": [],
+        "terms_missing": true
+      },
+      "resolver": {
+        "executable": true,
+        "inputs": [
+          {
+            "name": "upper_bound_before_september_2026_meeting",
+            "field": "Верхняя граница целевого диапазона ставки по федеральным фондам, действовавшая непосредственно до заседания FOMC 15-16 сентября 2026 г.",
+            "quote": "The FED interest rates are defined in this market by the upper bound of the target federal funds range.",
+            "source_url": "https://www.federalreserve.gov/monetarypolicy/openmarket.htm"
+          },
+          {
+            "name": "upper_bound_after_september_2026_statement",
+            "field": "Верхняя граница целевого диапазона ставки по федеральным фондам, объявленная в заявлении FOMC по итогам заседания 15-16 сентября 2026 г.",
+            "quote": "The resolution source for this market is the FOMC’s statement after its meeting scheduled for September 15-16, 2026 according to the official calendar: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm.",
+            "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"
+          },
+          {
+            "name": "statement_released_flag",
+            "field": "Факт публикации заявления FOMC по сентябрьскому заседанию 2026 г. до окончания следующего запланированного заседания",
+            "quote": "If no statement is released by the end date of the next scheduled meeting, this market will resolve to the \"No change\" bracket.",
+            "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"
+          },
+          {
+            "name": "market_bracket",
+            "field": "Бракет данного рынка из слага: снижение на 25 б.п.",
+            "quote": "This market will resolve to the amount of basis points the upper bound of the target federal funds rate is changed by versus the level it was prior to the Federal Reserve's September 2026 meeting."
+          }
+        ],
+        "procedure": [
+          "1. Считать со страницы https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm и с раздела пресс-релизов ФРС факт публикации заявления FOMC по заседанию 15-16 сентября 2026 г.",
+          "2. Если заявление не опубликовано до конца даты следующего запланированного заседания FOMC (по официальному календарю), присвоить итоговому бракету значение 'No change' и перейти к шагу 7.",
+          "3. Извлечь из заявления FOMC от 16 сентября 2026 г. числовое значение верхней границы целевого диапазона ставки по федеральным фондам (U_after), в процентах.",
+          "4. Извлечь с https://www.federalreserve.gov/monetarypolicy/openmarket.htm значение верхней границы целевого диапазона, действовавшее непосредственно до заседания 15-16 сентября 2026 г. (U_before).",
+          "5. Вычислить delta_bps = (U_after - U_before) * 100.",
+          "6. Округлить |delta_bps| ВВЕРХ до ближайшего кратного 25 (ceil(|delta_bps|/25)*25), сохранив знак delta_bps; полученное значение = итоговый бракет (0 => 'No change', -25 => 'снижение на 25 б.п.', и т.д.).",
+          "7. Сравнить итоговый бракет с бракетом рынка (снижение на 25 б.п., т.е. -25): при совпадении вернуть Yes, иначе No."
+        ],
+        "comparison": "Yes тогда и только тогда, когда округлённое вверх до кратного 25 изменение верхней границы целевого диапазона по итогам заседания FOMC 15-16 сентября 2026 г. равно -25 базисным пунктам; во всех остальных случаях (включая 'No change' при отсутствии заявления) — No.",
+        "missing_data_rule": "Если заявление FOMC по сентябрьскому заседанию 2026 г. не опубликовано до конца даты следующего запланированного заседания, рынок разрешается в бракет 'No change' — для данного рынка (-25 б.п.) это No. Прямая цитата: \\\"If no statement is released by the end date of the next scheduled meeting, this market will resolve to the 'No change' bracket.\\\"",
+        "human_judgment_required": null
+      },
+      "market": {
+        "p": 0.0035,
+        "q2": 0.9965,
+        "vol": 30670110,
+        "end": "2026-09-16",
+        "cat": 0.04,
+        "spread": 0.001
+      }
+    },
+    {
+      "q": "Will there be no change in Fed interest rates after the September 2026 meeting?",
+      "slug": "will-there-be-no-change-in-fed-interest-rates-after-the-september-2026-meeting-615",
+      "stage": "C",
+      "pass": true,
+      "skipped": false,
+      "fails": [],
+      "attrs": [
+        {
+          "key": "threshold",
+          "note": "нет сравнения с порогом"
+        },
+        {
+          "key": "missing",
+          "note": "не описано, что делать при отсутствии данных"
+        },
+        {
+          "key": "terms",
+          "note": "названный в правилах термин в источнике не найден: No change"
+        }
+      ],
+      "ev": {
+        "uma_statuses": "[]",
+        "escape_found": [],
+        "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+        "threshold_words": [],
+        "missing_data_words": [],
+        "end_date": "2026-09-16",
+        "latest_date_in_rules": null,
+        "http": 200,
+        "content_type": "text/html",
+        "bytes": 164826,
+        "is_data": false,
+        "is_shell": false,
+        "quoted_terms": [
+          "No change"
+        ],
+        "terms_found": [],
+        "terms_missing": true
+      },
+      "resolver": {
+        "executable": true,
+        "inputs": [
+          {
+            "name": "Верхняя граница целевого диапазона ставки по федеральным фондам до сентябрьского заседания 2026 г.",
+            "field": "upper_bound_prior",
+            "quote": "The FED interest rates are defined in this market by the upper bound of the target federal funds range.",
+            "source_url": "https://www.federalreserve.gov/monetarypolicy/openmarket.htm"
+          },
+          {
+            "name": "Верхняя граница целевого диапазона после заседания FOMC 15-16 сентября 2026 г.",
+            "field": "upper_bound_after",
+            "quote": "This market will resolve to the amount of basis points the upper bound of the target federal funds rate is changed by versus the level it was prior to the Federal Reserve's September 2026 meeting.",
+            "source_url": "https://www.federalreserve.gov/monetarypolicy/openmarket.htm"
+          },
+          {
+            "name": "Заявление FOMC по итогам заседания 15-16 сентября 2026 г. (факт публикации и дата)",
+            "field": "fomc_statement_published",
+            "quote": "The resolution source for this market is the FOMC’s statement after its meeting scheduled for September 15-16, 2026 according to the official calendar: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm.",
+            "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"
+          },
+          {
+            "name": "Дата следующего запланированного заседания FOMC по официальному календарю",
+            "field": "next_meeting_end_date",
+            "quote": "If no statement is released by the end date of the next scheduled meeting, this market will resolve to the \"No change\" bracket.",
+            "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"
+          },
+          {
+            "name": "Правило округления изменения ставки",
+            "field": "rounding_rule",
+            "quote": "If the target federal funds rate is changed to a level not expressed in the displayed options, the change will be rounded up to the nearest 25 and will resolve to the relevant bracket. (e.g. if there's a cut/increase of 12.5 bps it will be considered to be 25 bps)"
+          },
+          {
+            "name": "Метаданные рынка: end_date = 2026-09-16 (дата дедлайна)",
+            "field": "market_end_date",
+            "quote": "This market may resolve as soon as the FOMC’s statement for their September meeting with relevant data is issued."
+          }
+        ],
+        "procedure": [
+          "1. Зафиксировать U_prior = верхняя граница целевого диапазона федеральных фондов, действовавшая непосредственно перед заседанием FOMC 15-16 сентября 2026 г., по таблице на https://www.federalreserve.gov/monetarypolicy/openmarket.htm (последняя запись с датой вступления в силу < 2026-09-16).",
+          "2. В дату дедлайна 2026-09-16 (и далее при необходимости) проверить наличие на federalreserve.gov заявления FOMC по итогам заседания 15-16 сентября 2026 г. (пресс-релиз monetary policy statement с датой 2026-09-16).",
+          "3. Если заявление опубликовано: извлечь из него объявленную верхнюю границу целевого диапазона U_after (числовое значение в процентах, напр. 'target range for the federal funds rate at X to Y percent' → U_after = Y). Сверить с записью на странице openmarket.htm; при расхождении использовать заявление FOMC как приоритетный источник (прямо назван resolution source).",
+          "4. Вычислить delta_bps = (U_after − U_prior) × 100.",
+          "5. Если delta_bps = 0 → исход 'No change' → рынок 'Will there be no change...' резолвится Yes.",
+          "6. Если delta_bps ≠ 0 → округлить |delta_bps| вверх до ближайшего кратного 25 и присвоить соответствующий бракет со знаком (cut/increase); исход рынка 'No change' = No.",
+          "7. Если по состоянию на дату окончания следующего запланированного по официальному календарю заседания FOMC (следующая после 15-16 сентября 2026 г. дата в https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm) никакое заявление за сентябрьское заседание не опубликовано → присвоить бракет 'No change' → Yes. До этого момента рынок остаётся неразрешённым (влияет только на срок, не на исход)."
+        ],
+        "comparison": "delta_bps = (U_after − U_prior) × 100; Yes тогда и только тогда, когда delta_bps == 0, либо когда заявление не выпущено к дате окончания следующего запланированного заседания FOMC (fallback → 'No change'). Иначе No.",
+        "missing_data_rule": "Правила содержат явную оговорку: при отсутствии заявления к дате окончания следующего запланированного заседания исход = 'No change' (Yes). Если страница openmarket.htm недоступна, U_prior и U_after берутся из соответствующих пресс-релизов FOMC на federalreserve.gov (июльское/сентябрьское заявления) — оба значения публикуются дословно в тексте заявления.",
+        "human_judgment_required": null
+      },
+      "market": {
+        "p": 0.495,
+        "q2": 0.505,
+        "vol": 23202860,
+        "end": "2026-09-16",
+        "cat": 0.04,
+        "spread": 0.01
+      }
+    },
+    {
+      "q": "Will the Fed increase interest rates by 25 bps after the September 2026 meeting?",
+      "slug": "will-the-fed-increase-interest-rates-by-25-bps-after-the-september-2026-meeting-649",
+      "stage": "C",
+      "pass": true,
+      "skipped": false,
+      "fails": [],
+      "attrs": [
+        {
+          "key": "threshold",
+          "note": "нет сравнения с порогом"
+        },
+        {
+          "key": "missing",
+          "note": "не описано, что делать при отсутствии данных"
+        },
+        {
+          "key": "terms",
+          "note": "названный в правилах термин в источнике не найден: No change"
+        }
+      ],
+      "ev": {
+        "uma_statuses": "[]",
+        "escape_found": [],
+        "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+        "threshold_words": [],
+        "missing_data_words": [],
+        "end_date": "2026-09-16",
+        "latest_date_in_rules": null,
+        "http": 200,
+        "content_type": "text/html",
+        "bytes": 164826,
+        "is_data": false,
+        "is_shell": false,
+        "quoted_terms": [
+          "No change"
+        ],
+        "terms_found": [],
+        "terms_missing": true
+      },
+      "resolver": {
+        "executable": true,
+        "inputs": [
+          {
+            "name": "Верхняя граница целевого диапазона ставки ФРС до сентябрьского заседания 2026 г.",
+            "field": "upper_bound_target_range_pre_meeting",
+            "quote": "The FED interest rates are defined in this market by the upper bound of the target federal funds range.",
+            "source_url": "https://www.federalreserve.gov/monetarypolicy/openmarket.htm"
+          },
+          {
+            "name": "Верхняя граница целевого диапазона по заявлению FOMC после заседания 15-16 сентября 2026 г.",
+            "field": "upper_bound_target_range_post_meeting",
+            "quote": "The resolution source for this market is the FOMC’s statement after its meeting scheduled for September 15-16, 2026 according to the official calendar: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm.",
+            "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"
+          },
+          {
+            "name": "Факт выпуска заявления FOMC по сентябрьскому заседанию",
+            "field": "statement_issued_flag",
+            "quote": "This market may resolve as soon as the FOMC’s statement for their September meeting with relevant data is issued.",
+            "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"
+          },
+          {
+            "name": "Дата окончания следующего запланированного заседания FOMC (fallback-срок)",
+            "field": "next_scheduled_meeting_end_date",
+            "quote": "If no statement is released by the end date of the next scheduled meeting, this market will resolve to the \"No change\" bracket.",
+            "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"
+          },
+          {
+            "name": "Бракет данного рынка (+25 б.п. повышение)",
+            "field": "market_bracket",
+            "quote": "This market will resolve to the amount of basis points the upper bound of the target federal funds rate is changed by versus the level it was prior to the Federal Reserve's September 2026 meeting."
+          }
+        ],
+        "procedure": [
+          "1. Зафиксировать P = верхняя граница целевого диапазона ставки по федеральным фондам, действовавшая непосредственно перед заседанием FOMC 15-16 сентября 2026 г., по таблице на https://www.federalreserve.gov/monetarypolicy/openmarket.htm (в базисных пунктах).",
+          "2. После 2026-09-16 запросить страницу заявлений FOMC (federalreserve.gov) и проверить, опубликовано ли заявление по итогам заседания 15-16 сентября 2026 г.",
+          "3. Если заявление НЕ опубликовано к дате окончания следующего запланированного заседания FOMC по официальному календарю — разрешить рынок в бракет 'No change', то есть для данного рынка (+25 bps увеличение) исход = No. Конец.",
+          "4. Если заявление опубликовано, извлечь из его текста N = верхняя граница нового целевого диапазона федеральных фондов (в базисных пунктах); при расхождении использовать значение из таблицы openmarket.htm за дату 2026-09-16.",
+          "5. Вычислить D = N − P (в базисных пунктах, со знаком).",
+          "6. Округлить |D| ВВЕРХ до ближайшего кратного 25: R = 25 * ceil(|D| / 25). Знак сохранить: S = sign(D).",
+          "7. Сформировать итоговый бракет: если D = 0 → 'No change'; если S = +1 → 'increase R bps'; если S = −1 → 'decrease R bps'.",
+          "8. Сравнить итоговый бракет с бракетом данного рынка: 'increase 25 bps'.",
+          "9. Вернуть Yes, если бракет совпал; иначе No."
+        ],
+        "comparison": "Yes тогда и только тогда, когда (N − P) > 0 и 25*ceil((N − P)/25) = 25, то есть 0 &lt; N − P ≤ 25 б.п. по заявлению FOMC от 16.09.2026; во всех иных случаях, включая отсутствие заявления к концу следующего заседания (fallback 'No change'), — No.",
+        "missing_data_rule": "Если заявление FOMC по сентябрьскому заседанию не выпущено к дате окончания следующего запланированного заседания по официальному календарю ФРС — рынок разрешается в бракет 'No change' (для данного контракта = No). Значения P и N берутся из явно названных официальных источников ФРС; при их временной недоступности разрешение откладывается до восстановления доступа, что влияет только на срок, но не на исход.",
+        "human_judgment_required": null
+      },
+      "market": {
+        "p": 0.505,
+        "q2": 0.495,
+        "vol": 18556953,
+        "end": "2026-09-16",
+        "cat": 0.04,
+        "spread": 0.01
+      }
+    }
+  ],
   "rejected": [
     {
       "q": "Will Adanech Abiebie be the next Prime Minister of Ethiopia?",
@@ -96,22 +383,6 @@
       ]
     },
     {
-      "q": "Will the Fed decrease interest rates by 25 bps after the September 2026 meeting?",
-      "slug": "will-the-fed-decrease-interest-rates-by-25-bps-after-the-september-2026-meeting-586",
-      "stage": "C",
-      "fails": [
-        "API 400: {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"model: String should have at least 1 character\"},\"request_id\":\"req_011CemtSmMCHup7Tp3SbQUS5\"}"
-      ],
-      "diag": {
-        "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
-        "http": 200,
-        "content_type": "text/html",
-        "is_data": false,
-        "is_shell": false,
-        "terms_found": []
-      }
-    },
-    {
       "q": "Will Berhanu Nega be the next Prime Minister of Ethiopia?",
       "slug": "will-berhanu-nega-be-the-next-prime-minister-of-ethiopia",
       "stage": "A",
@@ -147,22 +418,6 @@
       ]
     },
     {
-      "q": "Will there be no change in Fed interest rates after the September 2026 meeting?",
-      "slug": "will-there-be-no-change-in-fed-interest-rates-after-the-september-2026-meeting-615",
-      "stage": "C",
-      "fails": [
-        "API 400: {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"model: String should have at least 1 character\"},\"request_id\":\"req_011CemtSnxvwZfQukgxbSHVN\"}"
-      ],
-      "diag": {
-        "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
-        "http": 200,
-        "content_type": "text/html",
-        "is_data": false,
-        "is_shell": false,
-        "terms_found": []
-      }
-    },
-    {
       "q": "Putin out as President of Russia by December 31, 2026?",
       "slug": "putin-out-before-2027-346",
       "stage": "A",
@@ -170,22 +425,6 @@
         "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of",
         "в правилах нет ссылки на источник"
       ]
-    },
-    {
-      "q": "Will the Fed increase interest rates by 25 bps after the September 2026 meeting?",
-      "slug": "will-the-fed-increase-interest-rates-by-25-bps-after-the-september-2026-meeting-649",
-      "stage": "C",
-      "fails": [
-        "API 400: {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"model: String should have at least 1 character\"},\"request_id\":\"req_011CemtSoi5bqvZ1SWTZHqpJ\"}"
-      ],
-      "diag": {
-        "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
-        "http": 200,
-        "content_type": "text/html",
-        "is_data": false,
-        "is_shell": false,
-        "terms_found": []
-      }
     },
     {
       "q": "Strait of Hormuz traffic returns to normal by August 31?",
