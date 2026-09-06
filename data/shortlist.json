@@ -1,10 +1,10 @@
 {
-  "generated": "2026-09-06T09:17:10.676Z",
+  "generated": "2026-09-06T12:37:28.438Z",
   "model": "claude-opus-5",
   "checked": 300,
   "gates_passed": 37,
   "resolver_calls": 12,
-  "passed": 3,
+  "passed": 10,
   "note": "Пустой шортлист — нормальный результат. Достижима ли планка вообще, отвечает scripts/calibrate.mjs, а не догадки. Ворота жёсткие только по трём критериям; остальное — атрибуты, они показываются на карточке, но не отсеивают.",
   "shortlist": [
     {
@@ -41,7 +41,7 @@
         "latest_date_in_rules": "2027-01-07",
         "http": 200,
         "content_type": "text/html;charset=utf-8",
-        "bytes": 456437,
+        "bytes": 456458,
         "is_data": false,
         "is_shell": false,
         "quoted_terms": [
@@ -56,54 +56,228 @@
         "executable": true,
         "inputs": [
           {
-            "name": "Таблица Box Office Mojo, годовой календарный сбор 2026, столбец \"Gross\"",
+            "name": "Таблица календарных сборов 2026 на Box Office Mojo, колонка \"Gross\"",
             "field": "Gross",
             "quote": "This market will resolve according to the title of the film with the highest 2026 gross according to the \"Gross\" column on https://www.boxofficemojo.com/year/2026/?grossesOption=calendarGrosses once data for December 31 is made available.",
             "source_url": "https://www.boxofficemojo.com/year/2026/?grossesOption=calendarGrosses"
           },
           {
-            "name": "Столбец \"Release\" (название фильма) той же таблицы — сравнение с \"Michael\"",
-            "field": "Release/Title",
+            "name": "Название фильма (колонка Release/Title) в той же таблице",
+            "field": "Release",
             "quote": "the title of the film with the highest 2026 gross",
             "source_url": "https://www.boxofficemojo.com/year/2026/?grossesOption=calendarGrosses"
           },
           {
-            "name": "Ограничение периода: только календарные сборы 2026 года",
-            "field": "grossesOption=calendarGrosses",
-            "quote": "This market is about the movie's domestic calendar gross in 2026 - dates outside of 2026 will not count toward this movie's gross."
+            "name": "Целевое название фильма из заголовка рынка",
+            "field": "title",
+            "quote": "will resolve according to the title of the film with the highest 2026 gross"
           },
           {
-            "name": "Правило разрешения точного равенства",
-            "field": "tie-break",
+            "name": "Правило разрешения ничьей",
+            "field": "tiebreak",
             "quote": "In the event of an exact tie the film that comes first alphabetically will be considered the winner."
           },
           {
-            "name": "Крайний срок наличия финальных данных",
+            "name": "Крайний срок появления финальных данных",
             "field": "deadline",
             "quote": "If there is no final data available by January 7, 2027, 11:59 PM ET, another credible resolution source will be chosen."
           }
         ],
         "procedure": [
-          "1. После 31.12.2026 (и не позднее 07.01.2027 23:59 ET) загрузить страницу https://www.boxofficemojo.com/year/2026/?grossesOption=calendarGrosses.",
-          "2. Проверить, что таблица содержит данные, включающие 31 декабря 2026 (режим calendarGrosses, год 2026). Если нет — опрашивать страницу повторно раз в час до 07.01.2027 23:59 ET.",
-          "3. Считать все строки таблицы; для каждой строки извлечь пару (Release, Gross), очистив Gross от символов '$' и разделителей-запятых и приведя к целому числу.",
-          "4. Найти максимум значения Gross по всем строкам.",
-          "5. Собрать множество строк, у которых Gross строго равен этому максимуму.",
-          "6. Если таких строк более одной — отсортировать их названия (Release) лексикографически по возрастанию (сравнение строк по кодовым точкам после приведения к верхнему регистру) и взять первое.",
-          "7. Полученное единственное название обозначить как WINNER.",
-          "8. Сравнить WINNER с строкой 'Michael' посредством точного посимвольного равенства без учёта регистра и ведущих/замыкающих пробелов.",
-          "9. Если совпадает — YES; иначе — NO.",
-          "10. Если к 07.01.2027 23:59 ET шаг 2 не выполнен (страница недоступна или данные за 2026 год отсутствуют) — применяется missing_data_rule."
+          "1. После 31.12.2026 (и не позднее 07.01.2027 23:59 ET) загрузить страницу https://www.boxofficemojo.com/year/2026/?grossesOption=calendarGrosses и убедиться, что данные включают 31 декабря 2026 года (страница помечена как содержащая полные календарные сборы года).",
+          "2. Считать все строки таблицы: пару (Release/Title, Gross), где Gross — числовое значение в долларах после удаления символов '$' и ','.",
+          "3. Найти максимум значения Gross по всем строкам.",
+          "4. Если максимум достигается более чем одной строкой (точное равенство числовых значений), отсортировать эти названия по алфавиту (лексикографически, стандартное сравнение строк) и взять первое.",
+          "5. Полученное название сравнить строкой с целевым названием 'Michael' (нормализация: обрезка пробелов, приведение к нижнему регистру).",
+          "6. Если совпадает — Yes; иначе — No.",
+          "7. Если к 07.01.2027 23:59 ET финальные данные на Box Office Mojo недоступны, повторить шаги 2–6 по резервному источнике; при его отсутствии в правилах выбор источника задерживает срок, но не меняет вычисление исхода."
         ],
-        "comparison": "WINNER (название строки с максимальным числовым значением столбца Gross в таблице BoxOfficeMojo year/2026 calendarGrosses, при равенстве — первое по алфавиту) == \\\"Michael\\\" → YES, иначе NO",
-        "human_judgment_required": null,
-        "missing_data_rule": "Основной источник — фиксированный URL Box Office Mojo (year/2026, grossesOption=calendarGrosses); опрос ежечасно с 01.01.2027 до 07.01.2027 23:59 ET. Оговорка «another credible resolution source will be chosen» влияет только на срок/канал получения того же ряда данных (домашние календарные сборы 2026), а не на исход; при полной недоступности данных к 07.01.2027 применяется резервный источник The Numbers (https://www.the-numbers.com/market/2026/top-grossing-movies) с тем же алгоритмом шагов 3–9."
+        "comparison": "Строковое равенство: title(argmax Gross по таблице календарных сборов 2026 BoxOfficeMojo, при ничьей — алфавитно первый) == 'Michael' → Yes, иначе No.",
+        "missing_data_rule": "Если финальные данные BoxOfficeMojo недоступны к 2027-01-07 23:59 ET, правила предписывают взять другой достоверный источник тех же данных (домашние календарные сборы 2026); это влияет только на срок и источник ряда, вычисление максимума и сравнение названия остаются теми же.",
+        "human_judgment_required": null
       },
       "market": {
         "p": 0.0005,
         "q2": 0.9995,
         "vol": 1321129,
         "end": "2026-12-31",
+        "cat": 0.05,
+        "spread": 0.001
+      }
+    },
+    {
+      "q": "Will Khvicha Kvaratskhelia win the 2026 Ballon d'Or?",
+      "slug": "will-khvicha-kvaratskhelia-win-the-2026-ballon-dor",
+      "stage": "C",
+      "pass": true,
+      "skipped": false,
+      "fails": [],
+      "attrs": [
+        {
+          "key": "threshold",
+          "note": "нет сравнения с порогом"
+        },
+        {
+          "key": "missing",
+          "note": "не описано, что делать при отсутствии данных"
+        },
+        {
+          "key": "dates",
+          "note": "срок в правилах дальше даты на карточке: 2026-12-31 против 2026-10-31"
+        }
+      ],
+      "attention": {
+        "score": 0.4567,
+        "neglect": 0.457,
+        "tradeable": 1,
+        "spread_ok": 1,
+        "why": "умеренное внимание"
+      },
+      "ev": {
+        "uma_statuses": null,
+        "escape_found": [],
+        "source_url": "https://www.francefootball.fr/",
+        "threshold_words": [],
+        "missing_data_words": [],
+        "end_date": "2026-10-31",
+        "latest_date_in_rules": "2026-12-31",
+        "http": 200,
+        "content_type": "text/html; charset=utf-8",
+        "bytes": 162631,
+        "is_data": false,
+        "is_shell": false,
+        "quoted_terms": [],
+        "terms_found": [],
+        "terms_missing": false
+      },
+      "resolver": {
+        "executable": true,
+        "inputs": [
+          {
+            "name": "Победитель «Золотого мяча» 2026 (имя игрока) по официальной публикации France Football",
+            "field": "winner_name",
+            "quote": "This market will resolve according to the winner of the 2026 Ballon d’Or.",
+            "source_url": "https://www.francefootball.fr/"
+          },
+          {
+            "name": "Факт объявления победителя до дедлайна",
+            "field": "winner_declared_by_deadline",
+            "quote": "If no 2026 Ballon d’Or winner is declared by December 31, 2026, 11:59 PM ET, this market will resolve to \"Other\".",
+            "source_url": "https://www.francefootball.fr/"
+          },
+          {
+            "name": "Источник разрешения",
+            "field": "source",
+            "quote": "The primary resolution source for this market is official information from France Football (https://www.francefootball.fr/).",
+            "source_url": "https://www.francefootball.fr/"
+          }
+        ],
+        "procedure": [
+          "В дату дедлайна (и далее до 2026-12-31 23:59 ET) запросить официальную публикацию France Football (francefootball.fr) с объявлением обладателя Ballon d'Or 2026 (мужская номинация — предмет рынка, поскольку рынок сформулирован о конкретном игроке-мужчине Хвиче Кварацхелии).",
+          "Извлечь строку winner_name — имя игрока, названного победителем Ballon d'Or 2026 в этой публикации.",
+          "Если публикации с объявлением победителя нет на момент 2026-12-31 23:59 ET → зафиксировать winner_declared_by_deadline = false и вернуть No (исход 'Other' для данного бинарного контракта на конкретного игрока).",
+          "Если winner_declared_by_deadline = true → нормализовать winner_name (нижний регистр, удаление диакритики, схлопывание пробелов) и сравнить со списком принятых написаний целевого игрока: {'khvicha kvaratskhelia', 'kvaratskhelia khvicha', 'kvaratskhelia'}.",
+          "Если нормализованное имя совпадает с одним из принятых написаний → Yes; иначе → No.",
+          "Зафиксировать URL и дату публикации как аудит-след."
+        ],
+        "comparison": "winner_declared_by_deadline == true AND normalize(winner_name) ∈ {\"khvicha kvaratskhelia\", \"kvaratskhelia khvicha\", \"kvaratskhelia\"} → Yes; иначе → No",
+        "missing_data_rule": "Если официальная публикация France Football недоступна или победитель не объявлен к 2026-12-31 23:59 ET, применяется прямая оговорка правил: исход «Other», то есть No для данного контракта.",
+        "human_judgment_required": null
+      },
+      "market": {
+        "p": 0.029,
+        "q2": 0.971,
+        "vol": 1403184,
+        "end": "2026-10-31",
+        "cat": 0.05,
+        "spread": 0.004
+      }
+    },
+    {
+      "q": "Will Michael Olise win the 2026 Ballon d'Or?",
+      "slug": "will-michael-olise-win-the-2026-ballon-dor",
+      "stage": "C",
+      "pass": true,
+      "skipped": false,
+      "fails": [],
+      "attrs": [
+        {
+          "key": "threshold",
+          "note": "нет сравнения с порогом"
+        },
+        {
+          "key": "missing",
+          "note": "не описано, что делать при отсутствии данных"
+        },
+        {
+          "key": "dates",
+          "note": "срок в правилах дальше даты на карточке: 2026-12-31 против 2026-10-31"
+        }
+      ],
+      "attention": {
+        "score": 0.4566,
+        "neglect": 0.457,
+        "tradeable": 1,
+        "spread_ok": 1,
+        "why": "умеренное внимание"
+      },
+      "ev": {
+        "uma_statuses": null,
+        "escape_found": [],
+        "source_url": "https://www.francefootball.fr/",
+        "threshold_words": [],
+        "missing_data_words": [],
+        "end_date": "2026-10-31",
+        "latest_date_in_rules": "2026-12-31",
+        "http": 200,
+        "content_type": "text/html; charset=utf-8",
+        "bytes": 162631,
+        "is_data": false,
+        "is_shell": false,
+        "quoted_terms": [],
+        "terms_found": [],
+        "terms_missing": false
+      },
+      "resolver": {
+        "executable": true,
+        "inputs": [
+          {
+            "name": "Объявленный победитель мужского Ballon d'Or 2026",
+            "field": "winner_name",
+            "quote": "This market will resolve according to the winner of the 2026 Ballon d’Or.",
+            "source_url": "https://www.francefootball.fr/"
+          },
+          {
+            "name": "Факт объявления победителя до дедлайна",
+            "field": "declaration_datetime",
+            "quote": "If no 2026 Ballon d’Or winner is declared by December 31, 2026, 11:59 PM ET, this market will resolve to \"Other\".",
+            "source_url": "https://www.francefootball.fr/"
+          },
+          {
+            "name": "Официальный источник публикации",
+            "field": "source",
+            "quote": "The primary resolution source for this market is official information from France Football (https://www.francefootball.fr/).",
+            "source_url": "https://www.francefootball.fr/"
+          }
+        ],
+        "procedure": [
+          "1. В момент разрешения (не ранее end_date рынка, но с окном ожидания до 2026-12-31 23:59 ET) запросить официальную публикацию France Football (francefootball.fr) о вручении Ballon d'Or 2026.",
+          "2. Извлечь поле declaration_datetime — дату и время официального объявления победителя мужского Ballon d'Or 2026.",
+          "3. Если declaration_datetime отсутствует или > 2026-12-31 23:59 America/New_York → вернуть исход 'Other' (для данного контракта на конкретного игрока это No).",
+          "4. Иначе извлечь winner_name — имя игрока, названного France Football победителем Ballon d'Or 2026.",
+          "5. Нормализовать winner_name и целевое имя из slug ('Michael Olise'): привести к нижнему регистру, убрать диакритику, лишние пробелы и дефисы.",
+          "6. Сравнить нормализованные строки на точное равенство.",
+          "7. Если равны → Yes. Если не равны → No."
+        ],
+        "comparison": "normalize(winner_name из официальной публикации France Football) == normalize(\\\"Michael Olise\\\") при условии declaration_datetime <= 2026-12-31 23:59 America/New_York; иначе No",
+        "missing_data_rule": "Если по состоянию на 2026-12-31 23:59 ET на francefootball.fr нет объявления победителя Ballon d'Or 2026, исход фиксируется как 'Other', то есть для данного контракта — No. Правило прямо прописано в тексте и не требует человеческой оценки.",
+        "human_judgment_required": null
+      },
+      "market": {
+        "p": 0.0015,
+        "q2": 0.9985,
+        "vol": 1404032,
+        "end": "2026-10-31",
         "cat": 0.05,
         "spread": 0.001
       }
@@ -130,7 +304,7 @@
         }
       ],
       "attention": {
-        "score": 0.4552,
+        "score": 0.455,
         "neglect": 0.455,
         "tradeable": 1,
         "spread_ok": 1,
@@ -146,7 +320,7 @@
         "latest_date_in_rules": "2026-12-31",
         "http": 200,
         "content_type": "text/html; charset=utf-8",
-        "bytes": 162591,
+        "bytes": 162631,
         "is_data": false,
         "is_shell": false,
         "quoted_terms": [],
@@ -157,49 +331,227 @@
         "executable": true,
         "inputs": [
           {
-            "name": "Официально объявленный победитель мужского Ballon d'Or 2026",
+            "name": "Объявленный победитель мужского Золотого мяча 2026 по официальной информации France Football",
             "field": "winner_name",
             "quote": "This market will resolve according to the winner of the 2026 Ballon d’Or.",
             "source_url": "https://www.francefootball.fr/"
           },
           {
-            "name": "Факт объявления победителя до дедлайна",
+            "name": "Факт объявления победителя до крайнего срока",
             "field": "declaration_datetime",
             "quote": "If no 2026 Ballon d’Or winner is declared by December 31, 2026, 11:59 PM ET, this market will resolve to \"Other\".",
             "source_url": "https://www.francefootball.fr/"
           },
           {
-            "name": "Источник разрешения",
+            "name": "Официальный источник разрешения",
             "field": "source",
             "quote": "The primary resolution source for this market is official information from France Football (https://www.francefootball.fr/).",
             "source_url": "https://www.francefootball.fr/"
-          },
-          {
-            "name": "Субъект рынка (из slug)",
-            "field": "market_subject",
-            "quote": "This market will resolve according to the winner of the 2026 Ballon d’Or.",
-            "source_url": "slug: will-rodri-win-the-2026-ballon-dor"
           }
         ],
         "procedure": [
-          "1. В дату дедлайна (2026-10-31; при отсутствии объявления — ожидание до контрольной точки 2026-12-31 23:59 ET, заданной правилами) обратиться к официальному сайту France Football (https://www.francefootball.fr/) и найти публикацию об объявлении победителя Ballon d'Or 2026 (мужская награда).",
-          "2. Если на 2026-12-31 23:59 ET публикация об объявленном победителе Ballon d'Or 2026 отсутствует — вернуть No (исход 'Other' для контракта 'Rodri').",
-          "3. Если публикация есть — извлечь строку имени победителя (winner_name) из официального сообщения France Football.",
-          "4. Нормализовать строку: привести к нижнему регистру, удалить диакритику и лишние пробелы.",
-          "5. Сравнить нормализованное имя с эталоном 'rodri' / 'rodrigo hernandez cascante' (испанский полузащитник Manchester City, субъект рынка по slug).",
-          "6. Совпадение -> Yes; иное имя -> No."
+          "1. На дату дедлайна (end_date рынка, при необходимости — до 31 декабря 2026, 23:59 ET) обратиться к официальной публикации France Football (francefootball.fr) о вручении Ballon d'Or 2026.",
+          "2. Извлечь поле declaration_datetime — момент официального объявления победителя Ballon d'Or 2026 (мужской приз).",
+          "3. Если declaration_datetime отсутствует или позже 2026-12-31T23:59 ET → вернуть No (рынок разрешается в 'Other', то есть не в пользу Родри).",
+          "4. Если объявление состоялось в срок, извлечь поле winner_name — имя объявленного победителя.",
+          "5. Нормализовать строку winner_name (регистр, диакритика, пробелы) и сравнить с 'Rodri' (Rodrigo Hernández Cascante, идентификация по имени в официальной публикации France Football).",
+          "6. Если winner_name == 'Rodri' → Yes; иначе → No."
         ],
-        "comparison": "winner_name (нормализованное) == 'rodri' / 'rodrigo hernandez cascante' -> Yes; любое другое объявленное имя -> No; отсутствие объявления на 2026-12-31 23:59 ET -> No",
-        "missing_data_rule": "Если официальный сайт France Football недоступен или не содержит объявления к 2026-12-31 23:59 ET, применяется прямая оговорка правил: победитель считается не объявленным, исход 'Other' -> No. Дискреция касается только срока (ожидание с 2026-10-31 до 2026-12-31), но не исхода.",
-        "human_judgment_required": null
+        "comparison": "winner_name (нормализованное) == 'Rodri' И declaration_datetime <= 2026-12-31T23:59 ET → Yes; иначе No",
+        "missing_data_rule": "Если к 2026-12-31 23:59 ET на официальном ресурсе France Football нет объявления победителя Ballon d'Or 2026, исход фиксируется как 'Other' → No."
       },
       "market": {
         "p": 0.055,
         "q2": 0.945,
-        "vol": 1419713,
+        "vol": 1422365,
         "end": "2026-10-31",
         "cat": 0.05,
         "spread": 0.01
+      }
+    },
+    {
+      "q": "Will Project Hail Mary be the top grossing movie of 2026?",
+      "slug": "will-project-hail-mary-be-the-top-grossing-movie-of-2026",
+      "stage": "C",
+      "pass": true,
+      "skipped": false,
+      "fails": [],
+      "attrs": [
+        {
+          "key": "threshold",
+          "note": "нет сравнения с порогом"
+        },
+        {
+          "key": "missing",
+          "note": "не описано, что делать при отсутствии данных"
+        }
+      ],
+      "attention": {
+        "score": 0.4542,
+        "neglect": 0.454,
+        "tradeable": 1,
+        "spread_ok": 1,
+        "why": "умеренное внимание"
+      },
+      "ev": {
+        "uma_statuses": null,
+        "escape_found": [],
+        "source_url": "https://www.boxofficemojo.com/year/2026/?grossesOption=calendarGrosses",
+        "threshold_words": [],
+        "missing_data_words": [],
+        "end_date": "2026-12-31",
+        "latest_date_in_rules": "2027-01-07",
+        "http": 200,
+        "content_type": "text/html;charset=utf-8",
+        "bytes": 458584,
+        "is_data": false,
+        "is_shell": false,
+        "quoted_terms": [
+          "Gross"
+        ],
+        "terms_found": [
+          "Gross"
+        ],
+        "terms_missing": false
+      },
+      "resolver": {
+        "executable": true,
+        "inputs": [
+          {
+            "name": "Таблица календарных сборов Box Office Mojo за 2026 год, колонка \"Gross\"",
+            "field": "Gross",
+            "quote": "This market will resolve according to the title of the film with the highest 2026 gross according to the \"Gross\" column on https://www.boxofficemojo.com/year/2026/?grossesOption=calendarGrosses once data for December 31 is made available.",
+            "source_url": "https://www.boxofficemojo.com/year/2026/?grossesOption=calendarGrosses"
+          },
+          {
+            "name": "Название фильма (колонка Release/Title) в той же таблице",
+            "field": "Release",
+            "quote": "This market will resolve according to the title of the film with the highest 2026 gross"
+          },
+          {
+            "name": "Признак доступности данных за 31 декабря 2026",
+            "field": "data_for_december_31_available",
+            "quote": "once data for December 31 is made available"
+          },
+          {
+            "name": "Правило разрешения ничьей",
+            "field": "alphabetical_order",
+            "quote": "In the event of an exact tie the film that comes first alphabetically will be considered the winner."
+          },
+          {
+            "name": "Крайний срок наличия финальных данных",
+            "field": "deadline_final_data",
+            "quote": "If there is no final data available by January 7, 2027, 11:59 PM ET, another credible resolution source will be chosen."
+          }
+        ],
+        "procedure": [
+          "1. После 31.12.2026 запросить страницу https://www.boxofficemojo.com/year/2026/?grossesOption=calendarGrosses (режим calendarGrosses, то есть сборы, засчитанные только за календарный 2026 год).",
+          "2. Проверить, что таблица содержит данные, включающие 31 декабря 2026 (страница отмечена как обновлённая по итогам года / присутствует полный годовой набор строк). Если нет — повторять опрос до 2027-01-07 23:59 ET.",
+          "3. Распарсить таблицу в список пар (Release/Title, Gross), приведя значения колонки \"Gross\" к целому числу (удалить символы '$' и ',').",
+          "4. Отсортировать по числовому значению Gross по убыванию; взять максимальное значение G_max.",
+          "5. Сформировать множество строк с Gross == G_max. Если в множестве более одной строки, отсортировать их названия лексикографически (стандартный алфавитный порядок) и взять первое.",
+          "6. Сравнить полученное название-победитель со строкой 'Project Hail Mary' (сравнение без учёта регистра и с нормализацией пробелов/пунктуации).",
+          "7. Если совпадает — Yes; если не совпадает — No.",
+          "8. Если к 2027-01-07 23:59 ET финальные данные на Box Office Mojo недоступны, взять числовые данные по календарным сборам 2026 года из резервного источника и повторить шаги 3–7."
+        ],
+        "comparison": "winner_title == \\\"Project Hail Mary\\\" → Yes; иначе No. Победитель = argmax(Gross) по колонке \\\"Gross\\\" таблицы calendarGrosses за 2026; при точном равенстве максимума — первое название в алфавитном порядке.",
+        "missing_data_rule": "Если данные за 31 декабря 2026 не опубликованы на Box Office Mojo, опрос повторяется до 2027-01-07 23:59 ET; после этого используется резервный источник календарных домашних сборов за 2026 год (выбор источника влияет только на канал получения того же числового ряда и на срок, а не на определение победителя: критерий остаётся argmax числового сбора).",
+        "human_judgment_required": null
+      },
+      "market": {
+        "p": 0.0005,
+        "q2": 0.9995,
+        "vol": 1430642,
+        "end": "2026-12-31",
+        "cat": 0.05,
+        "spread": 0.001
+      }
+    },
+    {
+      "q": "Will Erling Haaland win the 2026 Ballon d'Or?",
+      "slug": "will-erling-haaland-win-the-2026-ballon-dor",
+      "stage": "C",
+      "pass": true,
+      "skipped": false,
+      "fails": [],
+      "attrs": [
+        {
+          "key": "threshold",
+          "note": "нет сравнения с порогом"
+        },
+        {
+          "key": "missing",
+          "note": "не описано, что делать при отсутствии данных"
+        },
+        {
+          "key": "dates",
+          "note": "срок в правилах дальше даты на карточке: 2026-12-31 против 2026-10-31"
+        }
+      ],
+      "attention": {
+        "score": 0.4492,
+        "neglect": 0.449,
+        "tradeable": 1,
+        "spread_ok": 1,
+        "why": "умеренное внимание"
+      },
+      "ev": {
+        "uma_statuses": null,
+        "escape_found": [],
+        "source_url": "https://www.francefootball.fr/",
+        "threshold_words": [],
+        "missing_data_words": [],
+        "end_date": "2026-10-31",
+        "latest_date_in_rules": "2026-12-31",
+        "http": 200,
+        "content_type": "text/html; charset=utf-8",
+        "bytes": 162631,
+        "is_data": false,
+        "is_shell": false,
+        "quoted_terms": [],
+        "terms_found": [],
+        "terms_missing": false
+      },
+      "resolver": {
+        "executable": true,
+        "inputs": [
+          {
+            "name": "Имя победителя мужского Ballon d'Or 2026 по официальной публикации France Football",
+            "field": "winner_name",
+            "quote": "This market will resolve according to the winner of the 2026 Ballon d’Or.",
+            "source_url": "https://www.francefootball.fr/"
+          },
+          {
+            "name": "Факт объявления победителя до 31.12.2026 23:59 ET",
+            "field": "winner_declared_by_deadline",
+            "quote": "If no 2026 Ballon d’Or winner is declared by December 31, 2026, 11:59 PM ET, this market will resolve to \"Other\".",
+            "source_url": "https://www.francefootball.fr/"
+          },
+          {
+            "name": "Официальный источник разрешения",
+            "field": "resolution_source",
+            "quote": "The primary resolution source for this market is official information from France Football (https://www.francefootball.fr/).",
+            "source_url": "https://www.francefootball.fr/"
+          }
+        ],
+        "procedure": [
+          "1. В момент разрешения (не ранее end_date рынка 2026-10-31; окончательная проверка — по состоянию на 2026-12-31 23:59 ET) обратиться к официальному источнику France Football (https://www.francefootball.fr/) и извлечь публикацию об объявлении победителя Ballon d'Or 2026 (мужская награда).",
+          "2. Если на 2026-12-31 23:59 ET на официальном источнике отсутствует объявление победителя Ballon d'Or 2026 — установить winner_declared_by_deadline = false и вернуть 'Other' (для данного контракта исход = No).",
+          "3. Если объявление есть — извлечь дословно имя победителя (winner_name) из официального сообщения France Football.",
+          "4. Нормализовать строку winner_name (приведение к нижнему регистру, снятие диакритики, удаление лишних пробелов) и сравнить с нормализованной строкой 'Erling Haaland' ('erling haaland'), включая известные официальные варианты написания полного имени 'Erling Braut Haaland'.",
+          "5. Если строки совпадают — вернуть Yes. Иначе — вернуть No."
+        ],
+        "comparison": "winner_name (нормализованное имя победителя Ballon d'Or 2026 по публикации France Football) == 'Erling Haaland' → Yes; иначе (в том числе winner_declared_by_deadline == false на 2026-12-31 23:59 ET) → No",
+        "missing_data_rule": "Если официальное объявление победителя не опубликовано France Football до 2026-12-31 23:59 ET, правила прямо предписывают исход 'Other', то есть No для данного контракта. Дополнительная оговорка о недоступности данных не требуется: исход зависит от дискретного события, а не от публикуемого числового ряда.",
+        "human_judgment_required": null
+      },
+      "market": {
+        "p": 0.0025,
+        "q2": 0.9975,
+        "vol": 1488100,
+        "end": "2026-10-31",
+        "cat": 0.05,
+        "spread": 0.001
       }
     },
     {
@@ -216,7 +568,7 @@
         }
       ],
       "attention": {
-        "score": 0.4298,
+        "score": 0.4297,
         "neglect": 0.43,
         "tradeable": 1,
         "spread_ok": 1,
@@ -245,54 +597,323 @@
         "executable": true,
         "inputs": [
           {
-            "name": "BEA quarterly real GDP, seasonally adjusted annualized percent change from preceding quarter (advance and latest estimates), Q2 2025 through Q4 2026",
-            "field": "percent change from preceding quarter, real GDP, SAAR",
+            "name": "BEA_real_GDP_qoq_saar_series",
+            "field": "Real GDP, percent change from preceding quarter, seasonally adjusted annual rate, quarters Q2 2025 through Q4 2026",
             "quote": "The seasonally adjusted annualized percent change in quarterly U.S. real GDP from the previous quarter is less than 0.0 for two consecutive quarters between Q2 2025 and Q4 2026 (inclusive), as reported by the Bureau of Economic Analysis (BEA).",
             "source_url": "https://www.bea.gov/data/gdp/gross-domestic-product"
           },
           {
-            "name": "Rule that advance estimates count as reported values",
-            "field": "estimate vintage selection",
+            "name": "BEA_estimate_vintage_rule",
+            "field": "Which vintage of each quarterly estimate is used (advance estimates count; otherwise most recent estimate)",
             "quote": "Note that advance estimates will be considered. For example, if upon release, the advance estimate for Q3 2025 was negative, and the Q2 2025's most recent, up-to-date estimate was also negative, this market would resolve to \"Yes\".",
             "source_url": "https://www.bea.gov/data/gdp/gross-domestic-product"
           },
           {
-            "name": "NBER public announcement of a US recession occurring during 2025 or 2026",
-            "field": "presence of NBER announcement on official NBER site",
-            "quote": "The National Bureau of Economic Research (NBER) publicly announces that a recession has occurred in the United States, at any point during 2025 or 2026, with the announcement made by the time the BEA releases the advance estimate for Q4 2026.",
-            "source_url": "https://www.nber.org/research/business-cycle-dating"
-          },
-          {
-            "name": "Cutoff event: BEA release of advance estimate for Q4 2026",
-            "field": "release date of Q4 2026 advance estimate",
+            "name": "BEA_Q4_2026_advance_release",
+            "field": "Publication date of the advance estimate for Q4 2026 (cutoff timestamp)",
             "quote": "this market will stay open until the Advance estimate of Q4 2026 is published, at which point it will resolve to \"Yes\" if Q4 2026 was negative or if the NBER declares a recession by then",
             "source_url": "https://www.bea.gov/data/gdp/gross-domestic-product"
           },
           {
-            "name": "Default outcome",
-            "field": "fallback",
+            "name": "NBER_recession_announcement",
+            "field": "Public announcement by the NBER Business Cycle Dating Committee that a recession has occurred in the U.S. at any point during 2025 or 2026",
+            "quote": "The National Bureau of Economic Research (NBER) publicly announces that a recession has occurred in the United States, at any point during 2025 or 2026, with the announcement made by the time the BEA releases the advance estimate for Q4 2026.",
+            "source_url": "https://www.nber.org/research/business-cycle-dating"
+          },
+          {
+            "name": "default_outcome",
+            "field": "Outcome if neither condition is satisfied",
             "quote": "Otherwise, this market will resolve to \"No\"."
           }
         ],
         "procedure": [
-          "1. Дождаться публикации BEA предварительной (advance) оценки ВВП за Q4 2026 (ожидается конец января 2027; метаданные рынка: end_date = 2027-01-31). Зафиксировать момент этой публикации T как момент разрешения.",
-          "2. Построить массив значений G[q] для q = Q2 2025, Q3 2025, Q4 2025, Q1 2026, Q2 2026, Q3 2026, Q4 2026: для каждого квартала взять последнюю опубликованную BEA на момент T оценку сезонно скорректированного годового процентного изменения реального ВВП к предыдущему кварталу (для Q4 2026 это advance-оценка; правило прямо предписывает учитывать advance-оценки).",
-          "3. Проверить условие 1: существует ли пара соседних кварталов (q, q+1) внутри диапазона Q2 2025 – Q4 2026, для которой G[q] < 0.0 И G[q+1] < 0.0. Сравнение чисто числовое с порогом 0.0.",
-          "4. Проверить условие 2: опубликовано ли на официальном сайте NBER (Business Cycle Dating Committee announcements, https://www.nber.org/research/business-cycle-dating) до момента T объявление, датирующее пик (начало рецессии) / наличие рецессии в США в какой-либо момент 2025 или 2026 календарных годов. Проверяется факт наличия такого датируемого объявления в официальном списке дат делового цикла NBER, где объявленный период рецессии пересекается с интервалом 2025-01-01 – 2026-12-31.",
-          "5. Если истинно условие шага 3 ИЛИ условие шага 4 → Yes.",
-          "6. Иначе → No."
+          "1. Определить момент T_cutoff = дата/время публикации BEA advance estimate для Q4 2026 (страница релизов BEA 'Gross Domestic Product'). Все проверки выполняются по данным, опубликованным не позднее T_cutoff.",
+          "2. Собрать с https://www.bea.gov/data/gdp/gross-domestic-product (таблица 'Real GDP: Percent change from preceding quarter, SAAR', NIPA Table 1.1.1, строка 'Gross domestic product') значения для кварталов Q2 2025, Q3 2025, Q4 2025, Q1 2026, Q2 2026, Q3 2026, Q4 2026.",
+          "3. Для каждого квартала взять последнюю опубликованную по состоянию на T_cutoff оценку (advance/second/third/annual-update), т.е. самое свежее значение из релиза BEA; для только что вышедшего Q4 2026 это advance estimate.",
+          "4. Дополнительно: после КАЖДОГО релиза BEA в интервале от даты создания рынка до T_cutoff строить вектор значений в том виде, в каком он существовал сразу после релиза (advance-оценка нового квартала + самые свежие оценки предыдущих кварталов), и применять шаг 5 к этому вектору.",
+          "5. Проверка условия 1: существует ли пара соседних кварталов (q, q+1) внутри диапазона Q2 2025 … Q4 2026 такая, что значение(q) < 0.0 И значение(q+1) < 0.0 в одном и том же снимке данных из шага 3 или 4. Если да — флаг GDP = true.",
+          "6. Проверка условия 2: опрашивать https://www.nber.org/research/business-cycle-dating и раздел новостей NBER; определить, опубликовано ли до T_cutoff официальное объявление Комитета по датировке деловых циклов NBER о пике деловой активности (начале рецессии) с датой пика, попадающей в 2025 или 2026 календарный год, либо объявление, что рецессия имела место в 2025 или 2026 году. Если да — флаг NBER = true.",
+          "7. Если GDP = true ИЛИ NBER = true — исход 'Yes'.",
+          "8. Иначе (по состоянию на T_cutoff оба флага false) — исход 'No'.",
+          "9. Разрешение фиксируется в момент выполнения одного из условий (Yes) либо в T_cutoff (No); при этом дата end_date 2027-01-31 из метаданных используется как крайний срок фиксации исхода."
         ],
-        "comparison": "Yes, если (∃ соседняя пара кварталов в [Q2 2025 … Q4 2026] с G < 0.0 у обоих, по последним оценкам BEA на момент выхода advance-оценки Q4 2026) ИЛИ (NBER до этого момента официально объявил рецессию, чей период пересекается с 2025–2026); иначе No.",
-        "missing_data_rule": "Если BEA задерживает публикацию advance-оценки Q4 2026 (например, из-за приостановки работы правительства), разрешение откладывается до фактической публикации — это влияет только на срок, не на исход. Если по какому-либо кварталу оценка не опубликована вовсе, соответствующее значение не считается отрицательным (условие 1 по этой паре не выполняется). Отсутствие объявления NBER трактуется как невыполнение условия 2.",
+        "comparison": "Булева дизъюнкция: (существует пара последовательных кварталов в окне Q2 2025–Q4 2026, где оба опубликованных BEA значения real GDP QoQ SAAR строго < 0.0, в одном снимке данных) OR (объявление NBER о рецессии 2025/2026 опубликовано до публикации advance estimate за Q4 2026) → Yes; иначе No.",
+        "missing_data_rule": "Если BEA не публикует advance estimate за Q4 2026 к 2027-01-31, T_cutoff принимается равным 2027-01-31 (end_date из метаданных), и проверка выполняется по всем данным, доступным на эту дату. Если отдельный квартал не опубликован, он не может дать значение < 0.0 и в пару не входит. Отсутствие объявления NBER трактуется как NBER = false.",
         "human_judgment_required": null
       },
       "market": {
-        "p": 0.065,
-        "q2": 0.935,
-        "vol": 1731709,
+        "p": 0.075,
+        "q2": 0.925,
+        "vol": 1732989,
         "end": "2027-01-31",
         "cat": 0.04,
         "spread": 0.01
+      }
+    },
+    {
+      "q": "Will Kylian Mbappé win the 2026 Ballon d'Or?",
+      "slug": "will-kylian-mbapp-win-the-2026-ballon-dor",
+      "stage": "C",
+      "pass": true,
+      "skipped": false,
+      "fails": [],
+      "attrs": [
+        {
+          "key": "threshold",
+          "note": "нет сравнения с порогом"
+        },
+        {
+          "key": "missing",
+          "note": "не описано, что делать при отсутствии данных"
+        },
+        {
+          "key": "dates",
+          "note": "срок в правилах дальше даты на карточке: 2026-12-31 против 2026-10-31"
+        }
+      ],
+      "attention": {
+        "score": 0.4152,
+        "neglect": 0.415,
+        "tradeable": 1,
+        "spread_ok": 1,
+        "why": "умеренное внимание"
+      },
+      "ev": {
+        "uma_statuses": null,
+        "escape_found": [],
+        "source_url": "https://www.francefootball.fr/",
+        "threshold_words": [],
+        "missing_data_words": [],
+        "end_date": "2026-10-31",
+        "latest_date_in_rules": "2026-12-31",
+        "http": 200,
+        "content_type": "text/html; charset=utf-8",
+        "bytes": 162631,
+        "is_data": false,
+        "is_shell": false,
+        "quoted_terms": [],
+        "terms_found": [],
+        "terms_missing": false
+      },
+      "resolver": {
+        "executable": true,
+        "inputs": [
+          {
+            "name": "Имя победителя мужского Ballon d'Or 2026 по официальной публикации France Football",
+            "field": "winner_name",
+            "quote": "This market will resolve according to the winner of the 2026 Ballon d’Or.",
+            "source_url": "https://www.francefootball.fr/"
+          },
+          {
+            "name": "Факт объявления победителя до дедлайна",
+            "field": "winner_declared_by_deadline",
+            "quote": "If no 2026 Ballon d’Or winner is declared by December 31, 2026, 11:59 PM ET, this market will resolve to \"Other\".",
+            "source_url": "https://www.francefootball.fr/"
+          },
+          {
+            "name": "Официальный источник разрешения",
+            "field": "source",
+            "quote": "The primary resolution source for this market is official information from France Football (https://www.francefootball.fr/).",
+            "source_url": "https://www.francefootball.fr/"
+          }
+        ],
+        "procedure": [
+          "1. В момент проверки (не ранее даты церемонии Ballon d'Or 2026 и не позднее 2026-12-31 23:59 ET) обратиться к официальной публикации France Football на francefootball.fr.",
+          "2. Считать поле winner_declared_by_deadline = true, если на 2026-12-31 23:59 ET France Football опубликовал имя победителя мужского Ballon d'Or 2026; иначе false.",
+          "3. Если winner_declared_by_deadline = false → исход 'Other' (для данного контракта — No).",
+          "4. Если true — извлечь строку winner_name из официальной публикации.",
+          "5. Нормализовать строку: привести к нижнему регистру, снять диакритику (Mbappé → mbappe), убрать пунктуацию и лишние пробелы.",
+          "6. Сравнить нормализованный winner_name со строкой 'kylian mbappe' (учитывая её как множество допустимых написаний: 'kylian mbappe', 'mbappe kylian').",
+          "7. Совпадение → Yes; несовпадение → No.",
+          "8. Метаданные рынка (end_date 2026-10-31) используются только для планирования момента запуска процедуры; финальная фиксация исхода производится по дедлайну правил 2026-12-31 23:59 ET."
+        ],
+        "comparison": "normalize(winner_name из официальной публикации France Football) == 'kylian mbappe' → Yes; иначе (в т.ч. отсутствие объявленного победителя на 2026-12-31 23:59 ET → 'Other') → No",
+        "missing_data_rule": "Если победитель не объявлен к 2026-12-31 23:59 ET (в том числе при недоступности публикации France Football на этот момент), правила прямо предписывают исход 'Other', что для данного бинарного контракта означает No.",
+        "human_judgment_required": null
+      },
+      "market": {
+        "p": 0.081,
+        "q2": 0.919,
+        "vol": 1941471,
+        "end": "2026-10-31",
+        "cat": 0.05,
+        "spread": 0.002
+      }
+    },
+    {
+      "q": "Will Lamine Yamal win the 2026 Ballon d'Or?",
+      "slug": "will-lamine-yamal-win-the-2026-ballon-dor",
+      "stage": "C",
+      "pass": true,
+      "skipped": false,
+      "fails": [],
+      "attrs": [
+        {
+          "key": "threshold",
+          "note": "нет сравнения с порогом"
+        },
+        {
+          "key": "missing",
+          "note": "не описано, что делать при отсутствии данных"
+        },
+        {
+          "key": "dates",
+          "note": "срок в правилах дальше даты на карточке: 2026-12-31 против 2026-10-31"
+        }
+      ],
+      "attention": {
+        "score": 0.4052,
+        "neglect": 0.405,
+        "tradeable": 1,
+        "spread_ok": 1,
+        "why": "умеренное внимание"
+      },
+      "ev": {
+        "uma_statuses": null,
+        "escape_found": [],
+        "source_url": "https://www.francefootball.fr/",
+        "threshold_words": [],
+        "missing_data_words": [],
+        "end_date": "2026-10-31",
+        "latest_date_in_rules": "2026-12-31",
+        "http": 200,
+        "content_type": "text/html; charset=utf-8",
+        "bytes": 162631,
+        "is_data": false,
+        "is_shell": false,
+        "quoted_terms": [],
+        "terms_found": [],
+        "terms_missing": false
+      },
+      "resolver": {
+        "executable": true,
+        "inputs": [
+          {
+            "name": "Победитель Золотого мяча 2026 (мужская награда), объявленный официально",
+            "field": "winner_name",
+            "quote": "This market will resolve according to the winner of the 2026 Ballon d’Or.",
+            "source_url": "https://www.francefootball.fr/"
+          },
+          {
+            "name": "Факт объявления победителя до дедлайна",
+            "field": "winner_declared_by_deadline",
+            "quote": "If no 2026 Ballon d’Or winner is declared by December 31, 2026, 11:59 PM ET, this market will resolve to \"Other\".",
+            "source_url": "https://www.francefootball.fr/"
+          },
+          {
+            "name": "Официальный источник",
+            "field": "source",
+            "quote": "The primary resolution source for this market is official information from France Football (https://www.francefootball.fr/).",
+            "source_url": "https://www.francefootball.fr/"
+          }
+        ],
+        "procedure": [
+          "1. В момент разрешения (не ранее end_date рынка 2026-10-31; окончательно — после 2026-12-31 23:59 ET) обратиться к официальной публикации France Football (francefootball.fr) о вручении Ballon d'Or 2026.",
+          "2. Проверить булев признак winner_declared_by_deadline: опубликовано ли на francefootball.fr официальное объявление победителя Ballon d'Or 2026 (мужская награда) с отметкой времени не позднее 2026-12-31 23:59:59 America/New_York.",
+          "3. Если winner_declared_by_deadline = false → исход 'Other' (для данного контракта на Ламина Ямаля = No). Завершить.",
+          "4. Если winner_declared_by_deadline = true → извлечь строку winner_name — имя победителя из официальной публикации.",
+          "5. Нормализовать winner_name (нижний регистр, снятие диакритики, схлопывание пробелов) и сравнить со строкой-эталоном 'lamine yamal' (с учётом полного официального написания 'Lamine Yamal Nasraoui Ebana' как совпадения по фамилии-имени).",
+          "6. Если строки совпадают → Yes. Иначе → No."
+        ],
+        "comparison": "winner_name (нормализованное имя из официального объявления France Football) == \"Lamine Yamal\" → Yes; иначе (включая случай отсутствия объявления к 2026-12-31 23:59 ET) → No",
+        "missing_data_rule": "Если к 2026-12-31 23:59 ET на официальном источнике нет объявленного победителя Ballon d'Or 2026 — рынок разрешается в 'Other', то есть No для данного контракта. Правило прямо прописано в тексте и не требует человеческой оценки."
+      },
+      "market": {
+        "p": 0.1395,
+        "q2": 0.8605,
+        "vol": 2099298,
+        "end": "2026-10-31",
+        "cat": 0.05,
+        "spread": 0.001
+      }
+    },
+    {
+      "q": "Will Ousmane Dembélé win the 2026 Ballon d'Or?",
+      "slug": "will-ousmane-dembl-win-the-2026-ballon-dor",
+      "stage": "C",
+      "pass": true,
+      "skipped": false,
+      "fails": [],
+      "attrs": [
+        {
+          "key": "threshold",
+          "note": "нет сравнения с порогом"
+        },
+        {
+          "key": "missing",
+          "note": "не описано, что делать при отсутствии данных"
+        },
+        {
+          "key": "dates",
+          "note": "срок в правилах дальше даты на карточке: 2026-12-31 против 2026-10-31"
+        }
+      ],
+      "attention": {
+        "score": 0.4021,
+        "neglect": 0.402,
+        "tradeable": 1,
+        "spread_ok": 1,
+        "why": "умеренное внимание"
+      },
+      "ev": {
+        "uma_statuses": null,
+        "escape_found": [],
+        "source_url": "https://www.francefootball.fr/",
+        "threshold_words": [],
+        "missing_data_words": [],
+        "end_date": "2026-10-31",
+        "latest_date_in_rules": "2026-12-31",
+        "http": 200,
+        "content_type": "text/html; charset=utf-8",
+        "bytes": 162631,
+        "is_data": false,
+        "is_shell": false,
+        "quoted_terms": [],
+        "terms_found": [],
+        "terms_missing": false
+      },
+      "resolver": {
+        "executable": true,
+        "inputs": [
+          {
+            "name": "Победитель «Золотого мяча» 2026 (мужская награда), объявленный официально",
+            "field": "winner_name",
+            "quote": "This market will resolve according to the winner of the 2026 Ballon d’Or.",
+            "source_url": "https://www.francefootball.fr/"
+          },
+          {
+            "name": "Факт объявления победителя до дедлайна",
+            "field": "declaration_datetime",
+            "quote": "If no 2026 Ballon d’Or winner is declared by December 31, 2026, 11:59 PM ET, this market will resolve to \"Other\".",
+            "source_url": "https://www.francefootball.fr/"
+          },
+          {
+            "name": "Официальный источник публикации",
+            "field": "source",
+            "quote": "The primary resolution source for this market is official information from France Football (https://www.francefootball.fr/).",
+            "source_url": "https://www.francefootball.fr/"
+          }
+        ],
+        "procedure": [
+          "1. В дату разрешения (не ранее объявления награды 2026, крайний срок проверки — 2026-12-31 23:59 ET) обратиться к официальной публикации France Football (francefootball.fr) о вручении «Золотого мяча» 2026.",
+          "2. Считать declared=true, если на francefootball.fr опубликовано имя победителя Ballon d’Or 2026 с датой публикации/церемонии не позднее 2026-12-31 23:59 ET.",
+          "3. Если declared=false — исход рынка «Other», то есть для контракта по слагу will-ousmane-dembl-win-the-2026-ballon-dor вернуть No.",
+          "4. Если declared=true — извлечь строку winner_name из официальной публикации.",
+          "5. Нормализовать winner_name и целевое имя из слага рынка (Ousmane Dembélé): привести к нижнему регистру, снять диакритику, схлопнуть пробелы и дефисы.",
+          "6. Сравнить нормализованные строки на точное равенство.",
+          "7. Равны → Yes; не равны → No."
+        ],
+        "comparison": "normalize(winner_name с francefootball.fr) == normalize(\\\"Ousmane Dembele\\\") AND declaration_datetime <= 2026-12-31T23:59 ET → Yes; иначе No",
+        "missing_data_rule": "Если к 2026-12-31 23:59 ET на официальном источнике France Football нет объявленного победителя Ballon d’Or 2026, рынок разрешается в «Other» (для данного контракта — No). Иных пробелов в данных исход не имеет: сравнение строки имени детерминировано.",
+        "human_judgment_required": null
+      },
+      "market": {
+        "p": 0.006,
+        "q2": 0.994,
+        "vol": 2150912,
+        "end": "2026-10-31",
+        "cat": 0.05,
+        "spread": 0.002
       }
     }
   ],
@@ -456,19 +1077,19 @@
       ]
     },
     {
-      "q": "Will Tarcisio de Freitas win the 2026 Brazilian presidential election?",
-      "slug": "will-tarcisio-de-frietas-win-the-2026-brazilian-presidential-election",
-      "stage": "A",
-      "fails": [
-        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
-      ]
-    },
-    {
       "q": "Clarity Act (H.R.3633) signed into law in 2026?",
       "slug": "clarity-act-signed-into-law-in-2026",
       "stage": "A",
       "fails": [
         "оговорка-лазейка: credible reporting"
+      ]
+    },
+    {
+      "q": "Will Tarcisio de Freitas win the 2026 Brazilian presidential election?",
+      "slug": "will-tarcisio-de-frietas-win-the-2026-brazilian-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
       ]
     },
     {
@@ -613,14 +1234,6 @@
       ]
     },
     {
-      "q": "Will Eduardo Bolsonaro win the 2026 Brazilian presidential election?",
-      "slug": "will-eduardo-bolsonaro-win-the-2026-brazilian-presidential-election",
-      "stage": "A",
-      "fails": [
-        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
-      ]
-    },
-    {
       "q": "Вернётся ли трафик Ормузского пролива к норме до 31 декабря",
       "slug": "strait-of-hormuz-traffic-returns-to-normal-by-december-31",
       "stage": "B",
@@ -635,6 +1248,14 @@
         "is_shell": true,
         "terms_found": []
       }
+    },
+    {
+      "q": "Will Eduardo Bolsonaro win the 2026 Brazilian presidential election?",
+      "slug": "will-eduardo-bolsonaro-win-the-2026-brazilian-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
     },
     {
       "q": "Will Carlos Roberto Massa Júnior win the 2026 Brazilian presidential election?",
@@ -693,19 +1314,19 @@
       ]
     },
     {
-      "q": "Will Fernando Alonso be the 2026 F1 Drivers' Champion?",
-      "slug": "will-fernando-alonso-be-the-2026-f1-drivers-champion",
-      "stage": "A",
-      "fails": [
-        "в правилах нет ссылки на источник"
-      ]
-    },
-    {
       "q": "Will United Russia (ER) gain the most seats in the next Russian parliamentary election?",
       "slug": "will-united-russia-er-gain-the-most-seats-in-the-next-russian-parliamentary-election",
       "stage": "A",
       "fails": [
         "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Fernando Alonso be the 2026 F1 Drivers' Champion?",
+      "slug": "will-fernando-alonso-be-the-2026-f1-drivers-champion",
+      "stage": "A",
+      "fails": [
         "в правилах нет ссылки на источник"
       ]
     },
@@ -901,16 +1522,16 @@
       ]
     },
     {
-      "q": "Will Evan Pettus be the leader of Venezuela end of 2026?",
-      "slug": "will-evan-pettus-be-the-leader-of-venezuela-end-of-2026",
+      "q": "Will Olivier Faure win the 2027 French presidential election?",
+      "slug": "will-olivier-faure-win-the-2027-french-presidential-election",
       "stage": "A",
       "fails": [
         "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
       ]
     },
     {
-      "q": "Will Olivier Faure win the 2027 French presidential election?",
-      "slug": "will-olivier-faure-win-the-2027-french-presidential-election",
+      "q": "Will Evan Pettus be the leader of Venezuela end of 2026?",
+      "slug": "will-evan-pettus-be-the-leader-of-venezuela-end-of-2026",
       "stage": "A",
       "fails": [
         "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
@@ -1185,6 +1806,15 @@
       "stage": "A",
       "fails": [
         "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Manchester United FC win on 2026-09-06?",
+      "slug": "epl-eve-mun-2026-09-06-mun",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
         "в правилах нет ссылки на источник"
       ]
     },
@@ -1600,19 +2230,19 @@
       ]
     },
     {
-      "q": "Opensea FDV above $500M one day after launch?",
-      "slug": "opensea-fdv-above-500m-one-day-after-launch-221-468-166-873-514-375-468-384",
-      "stage": "A",
-      "fails": [
-        "в правилах нет ссылки на источник"
-      ]
-    },
-    {
       "q": "Will Bernard Cazeneuve win the 2027 French presidential election?",
       "slug": "will-bernard-cazeneuve-win-the-2027-french-presidential-election",
       "stage": "A",
       "fails": [
         "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Opensea FDV above $500M one day after launch?",
+      "slug": "opensea-fdv-above-500m-one-day-after-launch-221-468-166-873-514-375-468-384",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
       ]
     },
     {
@@ -1641,6 +2271,14 @@
       ]
     },
     {
+      "q": "Will Juan Branco win the 2027 French presidential election?",
+      "slug": "will-juan-branco-win-the-2027-french-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
       "q": "Iran agrees to surrender enriched uranium stockpile by December 31, 2026?",
       "slug": "iran-agrees-to-surrender-enriched-uranium-stockpile-by-december-31-2026-752-299",
       "stage": "A",
@@ -1656,14 +2294,6 @@
       "fails": [
         "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used",
         "в правилах нет ссылки на источник"
-      ]
-    },
-    {
-      "q": "Will Juan Branco win the 2027 French presidential election?",
-      "slug": "will-juan-branco-win-the-2027-french-presidential-election",
-      "stage": "A",
-      "fails": [
-        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
       ]
     },
     {
@@ -1718,20 +2348,20 @@
       ]
     },
     {
+      "q": "Will Bruno Retailleau win the 2027 French presidential election?",
+      "slug": "will-bruno-retailleau-win-the-2027-french-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
       "q": "Will A Just Russia – For Truth (SRZP) gain the most seats in the next Russian parliamentary election?",
       "slug": "will-a-just-russia-for-truth-srzp-gain-the-most-seats-in-the-next-russian-parliamentary-election",
       "stage": "A",
       "fails": [
         "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
         "в правилах нет ссылки на источник"
-      ]
-    },
-    {
-      "q": "Will Bruno Retailleau win the 2027 French presidential election?",
-      "slug": "will-bruno-retailleau-win-the-2027-french-presidential-election",
-      "stage": "A",
-      "fails": [
-        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
       ]
     },
     {
@@ -1760,20 +2390,20 @@
       ]
     },
     {
+      "q": "Will Gérald Darmanin win the 2027 French presidential election?",
+      "slug": "will-grald-darmanin-win-the-2027-french-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
       "q": "Will Hezbollah disarm by December 31?",
       "slug": "will-hezbollah-disarm-by-december-31-632-848",
       "stage": "A",
       "fails": [
         "оговорка-лазейка: consensus of credible reporting, credible reporting",
         "в правилах нет ссылки на источник"
-      ]
-    },
-    {
-      "q": "Will Gérald Darmanin win the 2027 French presidential election?",
-      "slug": "will-grald-darmanin-win-the-2027-french-presidential-election",
-      "stage": "A",
-      "fails": [
-        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
       ]
     },
     {
@@ -1835,8 +2465,8 @@
       ]
     },
     {
-      "q": "Human moon landing in 2026?",
-      "slug": "human-moon-landing-in-2026",
+      "q": "Will the Iranian regime fall by September 30?",
+      "slug": "will-the-iranian-regime-fall-by-september-30-20260629143335077",
       "stage": "A",
       "fails": [
         "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
@@ -1844,8 +2474,8 @@
       ]
     },
     {
-      "q": "Will the Iranian regime fall by September 30?",
-      "slug": "will-the-iranian-regime-fall-by-september-30-20260629143335077",
+      "q": "Human moon landing in 2026?",
+      "slug": "human-moon-landing-in-2026",
       "stage": "A",
       "fails": [
         "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
@@ -1894,6 +2524,14 @@
       ]
     },
     {
+      "q": "Will Carlos Alcaraz win the 2026 Men's US Open?",
+      "slug": "will-carlos-alcaraz-win-the-2026-mens-us-open",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of"
+      ]
+    },
+    {
       "q": "Will Kyle Langford win the California Governor Election in 2026?",
       "slug": "will-kyle-langford-win-the-california-governor-election-in-2026",
       "stage": "A",
@@ -1902,11 +2540,11 @@
       ]
     },
     {
-      "q": "Will Carlos Alcaraz win the 2026 Men's US Open?",
-      "slug": "will-carlos-alcaraz-win-the-2026-mens-us-open",
+      "q": "Will McLaren be the 2026 F1 Constructors' Champion?",
+      "slug": "will-mclaren-be-the-2026-f1-constructors-champion",
       "stage": "A",
       "fails": [
-        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of"
+        "в правилах нет ссылки на источник"
       ]
     },
     {
@@ -1919,11 +2557,11 @@
       ]
     },
     {
-      "q": "Will McLaren be the 2026 F1 Constructors' Champion?",
-      "slug": "will-mclaren-be-the-2026-f1-constructors-champion",
+      "q": "Will David Lisnard win the 2027 French presidential election?",
+      "slug": "will-david-lisnard-win-the-2027-french-presidential-election",
       "stage": "A",
       "fails": [
-        "в правилах нет ссылки на источник"
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
       ]
     },
     {
@@ -1941,14 +2579,6 @@
       "stage": "A",
       "fails": [
         "в правилах нет ссылки на источник"
-      ]
-    },
-    {
-      "q": "Will David Lisnard win the 2027 French presidential election?",
-      "slug": "will-david-lisnard-win-the-2027-french-presidential-election",
-      "stage": "A",
-      "fails": [
-        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
       ]
     },
     {
@@ -2001,6 +2631,14 @@
       ]
     },
     {
+      "q": "Will Dominique de Villepin win the 2027 French presidential election?",
+      "slug": "will-dominique-de-villepin-win-the-2027-french-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
       "q": "Will Yariv Levin be the next Prime Minister of Israel?",
       "slug": "will-yariv-levin-be-the-next-prime-minister-of-israel",
       "stage": "A",
@@ -2016,14 +2654,6 @@
       "fails": [
         "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of",
         "в правилах нет ссылки на источник"
-      ]
-    },
-    {
-      "q": "Will Dominique de Villepin win the 2027 French presidential election?",
-      "slug": "will-dominique-de-villepin-win-the-2027-french-presidential-election",
-      "stage": "A",
-      "fails": [
-        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
       ]
     },
     {
@@ -2080,6 +2710,14 @@
       ]
     },
     {
+      "q": "Will Raphaël Glucksmann win the 2027 French presidential election?",
+      "slug": "will-raphal-glucksmann-win-the-2027-french-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
       "q": "Will Yabloko gain the most seats in the next Russian parliamentary election?",
       "slug": "will-yabloko-gain-the-most-seats-in-the-next-russian-parliamentary-election",
       "stage": "A",
@@ -2096,19 +2734,19 @@
       ]
     },
     {
-      "q": "Will Raphaël Glucksmann win the 2027 French presidential election?",
-      "slug": "will-raphal-glucksmann-win-the-2027-french-presidential-election",
-      "stage": "A",
-      "fails": [
-        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
-      ]
-    },
-    {
       "q": "Will the San Francisco Giants win the 2026 World Series?",
       "slug": "will-the-san-francisco-giants-win-the-2026-world-series",
       "stage": "A",
       "fails": [
         "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of"
+      ]
+    },
+    {
+      "q": "Will François Hollande win the 2027 French presidential election?",
+      "slug": "will-franois-hollande-win-the-2027-french-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
       ]
     },
     {
@@ -2127,14 +2765,6 @@
       "fails": [
         "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
         "в правилах нет ссылки на источник"
-      ]
-    },
-    {
-      "q": "Will François Hollande win the 2027 French presidential election?",
-      "slug": "will-franois-hollande-win-the-2027-french-presidential-election",
-      "stage": "A",
-      "fails": [
-        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
       ]
     },
     {
@@ -2179,19 +2809,19 @@
       ]
     },
     {
-      "q": "Will Kamala Harris win the California Governor Election in 2026?",
-      "slug": "will-kamala-harris-win-the-california-governor-election-in-2026",
-      "stage": "A",
-      "fails": [
-        "в правилах нет ссылки на источник"
-      ]
-    },
-    {
       "q": "Will Sébastien Lecornu win the 2027 French presidential election?",
       "slug": "will-sbastien-lecornu-win-the-2027-french-presidential-election",
       "stage": "A",
       "fails": [
         "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Kamala Harris win the California Governor Election in 2026?",
+      "slug": "will-kamala-harris-win-the-california-governor-election-in-2026",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
       ]
     },
     {
@@ -2256,6 +2886,14 @@
       ]
     },
     {
+      "q": "Will Jean Castex win the 2027 French presidential election?",
+      "slug": "will-jean-castex-win-the-2027-french-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
       "q": "US-Iran Final Nuclear Deal by September 30, 2026?",
       "slug": "us-iran-final-nuclear-deal-by-september-30-2026",
       "stage": "A",
@@ -2287,14 +2925,6 @@
       "fails": [
         "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
         "в правилах нет ссылки на источник"
-      ]
-    },
-    {
-      "q": "Will Jean Castex win the 2027 French presidential election?",
-      "slug": "will-jean-castex-win-the-2027-french-presidential-election",
-      "stage": "A",
-      "fails": [
-        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
       ]
     },
     {
@@ -2331,14 +2961,6 @@
       }
     },
     {
-      "q": "Will Greta Thunberg win the Nobel Peace Prize in 2026?",
-      "slug": "will-greta-thunberg-win-the-nobel-peace-prize-in-2026-767",
-      "stage": "A",
-      "fails": [
-        "в правилах нет ссылки на источник"
-      ]
-    },
-    {
       "q": "Will Crude Oil reach a new all-time high by September 30?",
       "slug": "will-crude-oil-reach-a-new-all-time-high-by-september-30",
       "stage": "B",
@@ -2356,6 +2978,14 @@
       "stage": "A",
       "fails": [
         "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Greta Thunberg win the Nobel Peace Prize in 2026?",
+      "slug": "will-greta-thunberg-win-the-nobel-peace-prize-in-2026-767",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
       ]
     },
     {
@@ -2493,20 +3123,20 @@
       ]
     },
     {
+      "q": "Will Jean-Luc Mélenchon win the 2027 French presidential election?",
+      "slug": "will-jean-luc-mlenchon-win-the-2027-french-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
       "q": "China x Japan military clash before 2027?",
       "slug": "china-x-japan-military-clash-before-2027",
       "stage": "A",
       "fails": [
         "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
         "в правилах нет ссылки на источник"
-      ]
-    },
-    {
-      "q": "Will Jean-Luc Mélenchon win the 2027 French presidential election?",
-      "slug": "will-jean-luc-mlenchon-win-the-2027-french-presidential-election",
-      "stage": "A",
-      "fails": [
-        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
       ]
     },
     {
@@ -2552,20 +3182,19 @@
       ]
     },
     {
-      "q": "Will Ahmed al-Sharaa win the Nobel Peace Prize in 2026?",
-      "slug": "will-ahmed-al-sharaa-win-the-nobel-peace-prize-in-2026",
-      "stage": "A",
-      "fails": [
-        "в правилах нет ссылки на источник"
-      ]
-    },
-    {
       "q": "Will Wicked: For Good be the top grossing movie of 2026?",
       "slug": "will-wicked-for-good-be-the-top-grossing-movie-of-2026",
       "stage": "C",
       "fails": [
         "не попал в лимит стадии C: слишком много внимания к рынку"
       ],
+      "attention": {
+        "score": 0.399,
+        "neglect": 0.399,
+        "tradeable": 1,
+        "spread_ok": 1,
+        "why": "умеренное внимание"
+      },
       "diag": {
         "source_url": "https://www.boxofficemojo.com/year/2026/?grossesOption=calendarGrosses",
         "http": 200,
@@ -2584,6 +3213,13 @@
       "fails": [
         "не попал в лимит стадии C: слишком много внимания к рынку"
       ],
+      "attention": {
+        "score": 0.3945,
+        "neglect": 0.395,
+        "tradeable": 1,
+        "spread_ok": 1,
+        "why": "умеренное внимание"
+      },
       "diag": {
         "source_url": "https://www.francefootball.fr/",
         "http": 200,
@@ -2600,6 +3236,13 @@
       "fails": [
         "не попал в лимит стадии C: слишком много внимания к рынку"
       ],
+      "attention": {
+        "score": 0.3932,
+        "neglect": 0.393,
+        "tradeable": 1,
+        "spread_ok": 1,
+        "why": "умеренное внимание"
+      },
       "diag": {
         "source_url": "https://www.boxofficemojo.com/year/2026/?grossesOption=calendarGrosses",
         "http": 200,
@@ -2618,6 +3261,13 @@
       "fails": [
         "не попал в лимит стадии C: слишком много внимания к рынку"
       ],
+      "attention": {
+        "score": 0.3851,
+        "neglect": 0.385,
+        "tradeable": 1,
+        "spread_ok": 1,
+        "why": "умеренное внимание"
+      },
       "diag": {
         "source_url": "https://www.boxofficemojo.com/year/2026/?grossesOption=calendarGrosses",
         "http": 200,
@@ -2636,6 +3286,13 @@
       "fails": [
         "не попал в лимит стадии C: слишком много внимания к рынку"
       ],
+      "attention": {
+        "score": 0.3768,
+        "neglect": 0.377,
+        "tradeable": 1,
+        "spread_ok": 1,
+        "why": "умеренное внимание"
+      },
       "diag": {
         "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
         "http": 200,
@@ -2652,22 +3309,13 @@
       "fails": [
         "не попал в лимит стадии C: слишком много внимания к рынку"
       ],
-      "diag": {
-        "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
-        "http": 200,
-        "content_type": "text/html",
-        "is_data": false,
-        "is_shell": false,
-        "terms_found": []
-      }
-    },
-    {
-      "q": "Will 1 Fed rate cut happen in 2026?",
-      "slug": "will-1-fed-rate-cut-happen-in-2026",
-      "stage": "C",
-      "fails": [
-        "не попал в лимит стадии C: слишком много внимания к рынку"
-      ],
+      "attention": {
+        "score": 0.3703,
+        "neglect": 0.37,
+        "tradeable": 1,
+        "spread_ok": 1,
+        "why": "умеренное внимание"
+      },
       "diag": {
         "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
         "http": 200,
@@ -2684,6 +3332,36 @@
       "fails": [
         "не попал в лимит стадии C: слишком много внимания к рынку"
       ],
+      "attention": {
+        "score": 0.3645,
+        "neglect": 0.365,
+        "tradeable": 1,
+        "spread_ok": 1,
+        "why": "умеренное внимание"
+      },
+      "diag": {
+        "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+        "http": 200,
+        "content_type": "text/html",
+        "is_data": false,
+        "is_shell": false,
+        "terms_found": []
+      }
+    },
+    {
+      "q": "Will 1 Fed rate cut happen in 2026?",
+      "slug": "will-1-fed-rate-cut-happen-in-2026",
+      "stage": "C",
+      "fails": [
+        "не попал в лимит стадии C: слишком много внимания к рынку"
+      ],
+      "attention": {
+        "score": 0.3645,
+        "neglect": 0.365,
+        "tradeable": 1,
+        "spread_ok": 1,
+        "why": "умеренное внимание"
+      },
       "diag": {
         "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
         "http": 200,
@@ -2700,6 +3378,13 @@
       "fails": [
         "не попал в лимит стадии C: слишком много внимания к рынку"
       ],
+      "attention": {
+        "score": 0.3595,
+        "neglect": 0.359,
+        "tradeable": 1,
+        "spread_ok": 1,
+        "why": "умеренное внимание"
+      },
       "diag": {
         "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
         "http": 200,
@@ -2716,6 +3401,13 @@
       "fails": [
         "не попал в лимит стадии C: слишком много внимания к рынку"
       ],
+      "attention": {
+        "score": 0.3479,
+        "neglect": 0.348,
+        "tradeable": 1,
+        "spread_ok": 1,
+        "why": "умеренное внимание"
+      },
       "diag": {
         "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
         "http": 200,
@@ -2732,24 +3424,15 @@
       "fails": [
         "не попал в лимит стадии C: слишком много внимания к рынку"
       ],
+      "attention": {
+        "score": 0.3458,
+        "neglect": 0.346,
+        "tradeable": 1,
+        "spread_ok": 1,
+        "why": "умеренное внимание"
+      },
       "diag": {
         "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
-        "http": 200,
-        "content_type": "text/html",
-        "is_data": false,
-        "is_shell": false,
-        "terms_found": []
-      }
-    },
-    {
-      "q": "Will the upper bound of the target federal funds rate be ≥ 4.5% at the end of 2026?",
-      "slug": "will-the-upper-bound-of-the-target-federal-funds-rate-be-4pt5-at-the-end-of-2026-139",
-      "stage": "C",
-      "fails": [
-        "не попал в лимит стадии C: слишком много внимания к рынку"
-      ],
-      "diag": {
-        "source_url": "https://www.federalreserve.gov/monetarypolicy/openmarket.htm",
         "http": 200,
         "content_type": "text/html",
         "is_data": false,
@@ -2764,6 +3447,13 @@
       "fails": [
         "не попал в лимит стадии C: слишком много внимания к рынку"
       ],
+      "attention": {
+        "score": 0.3253,
+        "neglect": 0.325,
+        "tradeable": 1,
+        "spread_ok": 1,
+        "why": "умеренное внимание"
+      },
       "diag": {
         "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
         "http": 200,
@@ -2780,6 +3470,13 @@
       "fails": [
         "не попал в лимит стадии C: слишком много внимания к рынку"
       ],
+      "attention": {
+        "score": 0.3232,
+        "neglect": 0.323,
+        "tradeable": 1,
+        "spread_ok": 1,
+        "why": "умеренное внимание"
+      },
       "diag": {
         "source_url": "https://www.francefootball.fr/",
         "http": 200,
@@ -2796,6 +3493,13 @@
       "fails": [
         "не попал в лимит стадии C: слишком много внимания к рынку"
       ],
+      "attention": {
+        "score": 0.3206,
+        "neglect": 0.321,
+        "tradeable": 1,
+        "spread_ok": 1,
+        "why": "умеренное внимание"
+      },
       "diag": {
         "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
         "http": 200,
@@ -2812,6 +3516,13 @@
       "fails": [
         "не попал в лимит стадии C: слишком много внимания к рынку"
       ],
+      "attention": {
+        "score": 0.3141,
+        "neglect": 0.314,
+        "tradeable": 1,
+        "spread_ok": 1,
+        "why": "умеренное внимание"
+      },
       "diag": {
         "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
         "http": 200,
@@ -2828,6 +3539,13 @@
       "fails": [
         "не попал в лимит стадии C: слишком много внимания к рынку"
       ],
+      "attention": {
+        "score": 0.2958,
+        "neglect": 0.296,
+        "tradeable": 1,
+        "spread_ok": 1,
+        "why": "умеренное внимание"
+      },
       "diag": {
         "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
         "http": 200,
@@ -2844,24 +3562,15 @@
       "fails": [
         "не попал в лимит стадии C: слишком много внимания к рынку"
       ],
+      "attention": {
+        "score": 0.2878,
+        "neglect": 0.288,
+        "tradeable": 1,
+        "spread_ok": 1,
+        "why": "умеренное внимание"
+      },
       "diag": {
         "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
-        "http": 200,
-        "content_type": "text/html",
-        "is_data": false,
-        "is_shell": false,
-        "terms_found": []
-      }
-    },
-    {
-      "q": "Will the upper bound of the target federal funds rate be 4.0% at the end of 2026?",
-      "slug": "will-the-upper-bound-of-the-target-federal-funds-rate-be-4pt0-at-the-end-of-2026-386",
-      "stage": "C",
-      "fails": [
-        "не попал в лимит стадии C: слишком много внимания к рынку"
-      ],
-      "diag": {
-        "source_url": "https://www.federalreserve.gov/monetarypolicy/openmarket.htm",
         "http": 200,
         "content_type": "text/html",
         "is_data": false,
@@ -2876,8 +3585,38 @@
       "fails": [
         "не попал в лимит стадии C: слишком много внимания к рынку"
       ],
+      "attention": {
+        "score": 0.2323,
+        "neglect": 0.232,
+        "tradeable": 1,
+        "spread_ok": 1,
+        "why": "умеренное внимание"
+      },
       "diag": {
         "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+        "http": 200,
+        "content_type": "text/html",
+        "is_data": false,
+        "is_shell": false,
+        "terms_found": []
+      }
+    },
+    {
+      "q": "Will the upper bound of the target federal funds rate be ≥ 4.5% at the end of 2026?",
+      "slug": "will-the-upper-bound-of-the-target-federal-funds-rate-be-4pt5-at-the-end-of-2026-139",
+      "stage": "C",
+      "fails": [
+        "не попал в лимит стадии C: слишком много внимания к рынку"
+      ],
+      "attention": {
+        "score": 0.1788,
+        "neglect": 0.388,
+        "tradeable": 0.461,
+        "spread_ok": 1,
+        "why": "умеренное внимание"
+      },
+      "diag": {
+        "source_url": "https://www.federalreserve.gov/monetarypolicy/openmarket.htm",
         "http": 200,
         "content_type": "text/html",
         "is_data": false,
@@ -2892,6 +3631,13 @@
       "fails": [
         "не попал в лимит стадии C: слишком много внимания к рынку"
       ],
+      "attention": {
+        "score": 0.1707,
+        "neglect": 0.171,
+        "tradeable": 1,
+        "spread_ok": 1,
+        "why": "рынок разобран, эдж от чтения правил маловероятен"
+      },
       "diag": {
         "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
         "http": 200,
@@ -2908,6 +3654,13 @@
       "fails": [
         "не попал в лимит стадии C: слишком много внимания к рынку"
       ],
+      "attention": {
+        "score": 0.1676,
+        "neglect": 0.168,
+        "tradeable": 1,
+        "spread_ok": 1,
+        "why": "рынок разобран, эдж от чтения правил маловероятен"
+      },
       "diag": {
         "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
         "http": 200,
@@ -2924,8 +3677,38 @@
       "fails": [
         "не попал в лимит стадии C: слишком много внимания к рынку"
       ],
+      "attention": {
+        "score": 0.1264,
+        "neglect": 0.126,
+        "tradeable": 1,
+        "spread_ok": 1,
+        "why": "рынок разобран, эдж от чтения правил маловероятен"
+      },
       "diag": {
         "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+        "http": 200,
+        "content_type": "text/html",
+        "is_data": false,
+        "is_shell": false,
+        "terms_found": []
+      }
+    },
+    {
+      "q": "Will the upper bound of the target federal funds rate be 4.0% at the end of 2026?",
+      "slug": "will-the-upper-bound-of-the-target-federal-funds-rate-be-4pt0-at-the-end-of-2026-386",
+      "stage": "C",
+      "fails": [
+        "не попал в лимит стадии C: слишком много внимания к рынку"
+      ],
+      "attention": {
+        "score": 0.1165,
+        "neglect": 0.46,
+        "tradeable": 0.253,
+        "spread_ok": 1,
+        "why": "умеренное внимание"
+      },
+      "diag": {
+        "source_url": "https://www.federalreserve.gov/monetarypolicy/openmarket.htm",
         "http": 200,
         "content_type": "text/html",
         "is_data": false,
@@ -2940,6 +3723,13 @@
       "fails": [
         "не попал в лимит стадии C: слишком много внимания к рынку"
       ],
+      "attention": {
+        "score": 0.0979,
+        "neglect": 0.098,
+        "tradeable": 1,
+        "spread_ok": 1,
+        "why": "рынок разобран, эдж от чтения правил маловероятен"
+      },
       "diag": {
         "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
         "http": 200,
@@ -2956,76 +3746,17 @@
       "fails": [
         "не попал в лимит стадии C: слишком много внимания к рынку"
       ],
+      "attention": {
+        "score": 0.0623,
+        "neglect": 0.062,
+        "tradeable": 1,
+        "spread_ok": 1,
+        "why": "рынок разобран, эдж от чтения правил маловероятен"
+      },
       "diag": {
         "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
         "http": 200,
         "content_type": "text/html",
-        "is_data": false,
-        "is_shell": false,
-        "terms_found": []
-      }
-    },
-    {
-      "q": "Will Khvicha Kvaratskhelia win the 2026 Ballon d'Or?",
-      "slug": "will-khvicha-kvaratskhelia-win-the-2026-ballon-dor",
-      "stage": "C",
-      "fails": [
-        "цитата не найдена в правилах: will-khvicha-kvaratskhelia-win-the-2026-ballon-dor"
-      ],
-      "diag": {
-        "source_url": "https://www.francefootball.fr/",
-        "http": 200,
-        "content_type": "text/html; charset=utf-8",
-        "is_data": false,
-        "is_shell": false,
-        "terms_found": []
-      }
-    },
-    {
-      "q": "Will Michael Olise win the 2026 Ballon d'Or?",
-      "slug": "will-michael-olise-win-the-2026-ballon-dor",
-      "stage": "C",
-      "fails": [
-        "цитата не найдена в правилах: will-michael-olise-win-the-2026-ballon-dor"
-      ],
-      "diag": {
-        "source_url": "https://www.francefootball.fr/",
-        "http": 200,
-        "content_type": "text/html; charset=utf-8",
-        "is_data": false,
-        "is_shell": false,
-        "terms_found": []
-      }
-    },
-    {
-      "q": "Will Project Hail Mary be the top grossing movie of 2026?",
-      "slug": "will-project-hail-mary-be-the-top-grossing-movie-of-2026",
-      "stage": "C",
-      "fails": [
-        "цитата не найдена в правилах: will-project-hail-mary-be-the-top-grossing-movie-of-2026"
-      ],
-      "diag": {
-        "source_url": "https://www.boxofficemojo.com/year/2026/?grossesOption=calendarGrosses",
-        "http": 200,
-        "content_type": "text/html;charset=utf-8",
-        "is_data": false,
-        "is_shell": false,
-        "terms_found": [
-          "Gross"
-        ]
-      }
-    },
-    {
-      "q": "Will Erling Haaland win the 2026 Ballon d'Or?",
-      "slug": "will-erling-haaland-win-the-2026-ballon-dor",
-      "stage": "C",
-      "fails": [
-        "цитата не найдена в правилах: will-erling-haaland-win-the-2026-ballon-dor"
-      ],
-      "diag": {
-        "source_url": "https://www.francefootball.fr/",
-        "http": 200,
-        "content_type": "text/html; charset=utf-8",
         "is_data": false,
         "is_shell": false,
         "terms_found": []
@@ -3037,8 +3768,15 @@
       "stage": "C",
       "fails": [
         "модель: процедура неисполнима",
-        "требует человека: Три качественных шага: (1) квалификация «launch» через признак «actively, publicly transferable and tradable» — «активно» и «публично» суть оценочные качественные признаки без порога и без реестра, определяющие момент отсчёта, а значит и исход; (2) выбор «most liquid price source available» — источник не назван, требуется человеческое сравнение площадок и толкование метрики ликвидности; (3) выбор значения «total token supply» — не указано, берётся ли totalSupply контракта, max supply или заявленная эмиссия. Все три влияют на Yes/No, а не только на срок."
+        "требует человека: Определение момента «launch» требует оценки качественного признака «actively, publicly transferable and tradable» (какая площадка, какой объём, что считать «активно»), а источник цены задан как «the most liquid price source available» — выбор между биржами/пулами и метрикой ликвидности является толкованием, не заданным правилами. Также не определено, какая величина считается «total token supply» (max supply, эмитированный объём, с учётом ли невыпущенных траншей)."
       ],
+      "attention": {
+        "score": 0.4478,
+        "neglect": 0.448,
+        "tradeable": 1,
+        "spread_ok": 1,
+        "why": "умеренное внимание"
+      },
       "diag": {
         "source_url": "https://www.puffpaw.xyz/",
         "http": 200,
@@ -3054,61 +3792,19 @@
       "stage": "C",
       "fails": [
         "модель: процедура неисполнима",
-        "требует человека: Три качественных развилки без машинного критерия: (1) момент 'launch' определяется через оценочный признак «actively, publicly transferable and tradable» — не задан ни порог активности, ни площадка, ни реестр событий; (2) идентификация самого «governance token» Puffpaw (контракт/тикер/ID) в правилах отсутствует; (3) «the most liquid price source available» требует выбора метрики ликвидности и перечня площадок — толкование, влияющее на исход Yes/No, а не только на срок. Дополнительно неоднозначно «total token supply» (total vs max vs с учётом burn) без указанного источника данных.",
-        "цитата не найдена в правилах: puffpaw-fdv-above-100m-one-day-after-launch; end_date 2027-0"
+        "требует человека: Два шага требуют человеческого толкования: (1) определение момента «launch» через качественный признак «actively, publicly transferable and tradable» — нет ни объективного порога (объёма, числа площадок, глубины книги), ни названного реестра, фиксирующего дату запуска; (2) выбор источника цены как «the most liquid price source available» — оценочный отбор между площадками/пулами без указания метрики ликвидности, приоритетного списка и правил при расхождении. Также не определён источник «total token supply» (эмиссия по контракту, циркулирующее предложение или заявленный максимум), что меняет исход."
       ],
+      "attention": {
+        "score": 0.4316,
+        "neglect": 0.432,
+        "tradeable": 1,
+        "spread_ok": 1,
+        "why": "умеренное внимание"
+      },
       "diag": {
         "source_url": "https://www.puffpaw.xyz/",
         "http": 200,
         "content_type": "text/html;charset=utf-8",
-        "is_data": false,
-        "is_shell": false,
-        "terms_found": []
-      }
-    },
-    {
-      "q": "Will Kylian Mbappé win the 2026 Ballon d'Or?",
-      "slug": "will-kylian-mbapp-win-the-2026-ballon-dor",
-      "stage": "C",
-      "fails": [
-        "цитата не найдена в правилах: will-kylian-mbapp-win-the-2026-ballon-dor"
-      ],
-      "diag": {
-        "source_url": "https://www.francefootball.fr/",
-        "http": 200,
-        "content_type": "text/html; charset=utf-8",
-        "is_data": false,
-        "is_shell": false,
-        "terms_found": []
-      }
-    },
-    {
-      "q": "Will Lamine Yamal win the 2026 Ballon d'Or?",
-      "slug": "will-lamine-yamal-win-the-2026-ballon-dor",
-      "stage": "C",
-      "fails": [
-        "цитата не найдена в правилах: will-lamine-yamal-win-the-2026-ballon-dor"
-      ],
-      "diag": {
-        "source_url": "https://www.francefootball.fr/",
-        "http": 200,
-        "content_type": "text/html; charset=utf-8",
-        "is_data": false,
-        "is_shell": false,
-        "terms_found": []
-      }
-    },
-    {
-      "q": "Will Ousmane Dembélé win the 2026 Ballon d'Or?",
-      "slug": "will-ousmane-dembl-win-the-2026-ballon-dor",
-      "stage": "C",
-      "fails": [
-        "цитата не найдена в правилах: will-ousmane-dembl-win-the-2026-ballon-dor"
-      ],
-      "diag": {
-        "source_url": "https://www.francefootball.fr/",
-        "http": 200,
-        "content_type": "text/html; charset=utf-8",
         "is_data": false,
         "is_shell": false,
         "terms_found": []
