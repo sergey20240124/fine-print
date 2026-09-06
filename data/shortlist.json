@@ -1,9 +1,9 @@
 {
-  "generated": "2026-09-06T08:28:06.514Z",
+  "generated": "2026-09-06T08:34:10.162Z",
   "model": "claude-opus-5",
   "checked": 20,
   "passed": 0,
-  "note": "Пустой шортлист — нормальный результат. Достижима ли планка вообще, отвечает scripts/calibrate.mjs, а не догадки.",
+  "note": "Пустой шортлист — нормальный результат. Достижима ли планка вообще, отвечает scripts/calibrate.mjs, а не догадки. Ворота жёсткие только по трём критериям; остальное — атрибуты, они показываются на карточке, но не отсеивают.",
   "shortlist": [],
   "rejected": [
     {
@@ -12,9 +12,7 @@
       "stage": "A",
       "fails": [
         "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of",
-        "в правилах нет ссылки на источник",
-        "нет сравнения с порогом",
-        "срок в правилах дальше даты на карточке: 2028-12-31 против 2026-06-01"
+        "в правилах нет ссылки на источник"
       ]
     },
     {
@@ -23,9 +21,7 @@
       "stage": "A",
       "fails": [
         "оговорка-лазейка: a consensus of",
-        "в правилах нет ссылки на источник",
-        "нет сравнения с порогом",
-        "не описано, что делать при отсутствии данных"
+        "в правилах нет ссылки на источник"
       ]
     },
     {
@@ -34,9 +30,7 @@
       "stage": "A",
       "fails": [
         "оговорка-лазейка: a consensus of",
-        "в правилах нет ссылки на источник",
-        "нет сравнения с порогом",
-        "не описано, что делать при отсутствии данных"
+        "в правилах нет ссылки на источник"
       ]
     },
     {
@@ -45,9 +39,7 @@
       "stage": "A",
       "fails": [
         "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of",
-        "в правилах нет ссылки на источник",
-        "нет сравнения с порогом",
-        "срок в правилах дальше даты на карточке: 2028-12-31 против 2026-06-01"
+        "в правилах нет ссылки на источник"
       ]
     },
     {
@@ -56,9 +48,7 @@
       "stage": "A",
       "fails": [
         "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of",
-        "в правилах нет ссылки на источник",
-        "нет сравнения с порогом",
-        "срок в правилах дальше даты на карточке: 2028-12-31 против 2026-06-01"
+        "в правилах нет ссылки на источник"
       ]
     },
     {
@@ -67,9 +57,7 @@
       "stage": "A",
       "fails": [
         "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
-        "в правилах нет ссылки на источник",
-        "нет сравнения с порогом",
-        "не описано, что делать при отсутствии данных"
+        "в правилах нет ссылки на источник"
       ]
     },
     {
@@ -78,9 +66,7 @@
       "stage": "A",
       "fails": [
         "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
-        "в правилах нет ссылки на источник",
-        "нет сравнения с порогом",
-        "не описано, что делать при отсутствии данных"
+        "в правилах нет ссылки на источник"
       ]
     },
     {
@@ -89,9 +75,7 @@
       "stage": "A",
       "fails": [
         "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
-        "в правилах нет ссылки на источник",
-        "нет сравнения с порогом",
-        "не описано, что делать при отсутствии данных"
+        "в правилах нет ссылки на источник"
       ]
     },
     {
@@ -99,9 +83,7 @@
       "slug": "will-richard-grenell-be-the-leader-of-venezuela-end-of-2026",
       "stage": "A",
       "fails": [
-        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
-        "нет сравнения с порогом",
-        "не описано, что делать при отсутствии данных"
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
       ]
     },
     {
@@ -110,19 +92,24 @@
       "stage": "A",
       "fails": [
         "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of",
-        "в правилах нет ссылки на источник",
-        "нет сравнения с порогом",
-        "срок в правилах дальше даты на карточке: 2028-12-31 против 2026-06-01"
+        "в правилах нет ссылки на источник"
       ]
     },
     {
       "q": "Will the Fed decrease interest rates by 25 bps after the September 2026 meeting?",
       "slug": "will-the-fed-decrease-interest-rates-by-25-bps-after-the-september-2026-meeting-586",
-      "stage": "A",
+      "stage": "B",
       "fails": [
-        "нет сравнения с порогом",
-        "не описано, что делать при отсутствии данных"
-      ]
+        "в источнике не найдено ни одного термина, названного в правилах"
+      ],
+      "diag": {
+        "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+        "http": 200,
+        "content_type": "text/html",
+        "is_data": false,
+        "is_shell": false,
+        "terms_found": []
+      }
     },
     {
       "q": "Will Berhanu Nega be the next Prime Minister of Ethiopia?",
@@ -130,9 +117,7 @@
       "stage": "A",
       "fails": [
         "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of",
-        "в правилах нет ссылки на источник",
-        "нет сравнения с порогом",
-        "срок в правилах дальше даты на карточке: 2028-12-31 против 2026-06-01"
+        "в правилах нет ссылки на источник"
       ]
     },
     {
@@ -141,9 +126,7 @@
       "stage": "A",
       "fails": [
         "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of",
-        "в правилах нет ссылки на источник",
-        "нет сравнения с порогом",
-        "срок в правилах дальше даты на карточке: 2028-12-31 против 2026-06-01"
+        "в правилах нет ссылки на источник"
       ]
     },
     {
@@ -151,9 +134,7 @@
       "slug": "will-frank-donovan-be-the-leader-of-venezuela-end-of-2026",
       "stage": "A",
       "fails": [
-        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
-        "нет сравнения с порогом",
-        "не описано, что делать при отсутствии данных"
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
       ]
     },
     {
@@ -162,19 +143,24 @@
       "stage": "A",
       "fails": [
         "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
-        "в правилах нет ссылки на источник",
-        "нет сравнения с порогом",
-        "не описано, что делать при отсутствии данных"
+        "в правилах нет ссылки на источник"
       ]
     },
     {
       "q": "Will there be no change in Fed interest rates after the September 2026 meeting?",
       "slug": "will-there-be-no-change-in-fed-interest-rates-after-the-september-2026-meeting-615",
-      "stage": "A",
+      "stage": "B",
       "fails": [
-        "нет сравнения с порогом",
-        "не описано, что делать при отсутствии данных"
-      ]
+        "в источнике не найдено ни одного термина, названного в правилах"
+      ],
+      "diag": {
+        "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+        "http": 200,
+        "content_type": "text/html",
+        "is_data": false,
+        "is_shell": false,
+        "terms_found": []
+      }
     },
     {
       "q": "Putin out as President of Russia by December 31, 2026?",
@@ -182,19 +168,24 @@
       "stage": "A",
       "fails": [
         "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of",
-        "в правилах нет ссылки на источник",
-        "нет сравнения с порогом",
-        "не описано, что делать при отсутствии данных"
+        "в правилах нет ссылки на источник"
       ]
     },
     {
       "q": "Will the Fed increase interest rates by 25 bps after the September 2026 meeting?",
       "slug": "will-the-fed-increase-interest-rates-by-25-bps-after-the-september-2026-meeting-649",
-      "stage": "A",
+      "stage": "B",
       "fails": [
-        "нет сравнения с порогом",
-        "не описано, что делать при отсутствии данных"
-      ]
+        "в источнике не найдено ни одного термина, названного в правилах"
+      ],
+      "diag": {
+        "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+        "http": 200,
+        "content_type": "text/html",
+        "is_data": false,
+        "is_shell": false,
+        "terms_found": []
+      }
     },
     {
       "q": "Strait of Hormuz traffic returns to normal by August 31?",
@@ -218,9 +209,7 @@
       "stage": "A",
       "fails": [
         "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of",
-        "в правилах нет ссылки на источник",
-        "нет сравнения с порогом",
-        "не описано, что делать при отсутствии данных"
+        "в правилах нет ссылки на источник"
       ]
     }
   ]
