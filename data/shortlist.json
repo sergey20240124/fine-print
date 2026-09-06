@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-06T08:34:10.162Z",
+  "generated": "2026-09-06T08:41:44.645Z",
   "model": "claude-opus-5",
   "checked": 20,
   "passed": 0,
@@ -98,9 +98,9 @@
     {
       "q": "Will the Fed decrease interest rates by 25 bps after the September 2026 meeting?",
       "slug": "will-the-fed-decrease-interest-rates-by-25-bps-after-the-september-2026-meeting-586",
-      "stage": "B",
+      "stage": "C",
       "fails": [
-        "в источнике не найдено ни одного термина, названного в правилах"
+        "API 400: {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"model: String should have at least 1 character\"},\"request_id\":\"req_011CemtSmMCHup7Tp3SbQUS5\"}"
       ],
       "diag": {
         "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
@@ -149,9 +149,9 @@
     {
       "q": "Will there be no change in Fed interest rates after the September 2026 meeting?",
       "slug": "will-there-be-no-change-in-fed-interest-rates-after-the-september-2026-meeting-615",
-      "stage": "B",
+      "stage": "C",
       "fails": [
-        "в источнике не найдено ни одного термина, названного в правилах"
+        "API 400: {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"model: String should have at least 1 character\"},\"request_id\":\"req_011CemtSnxvwZfQukgxbSHVN\"}"
       ],
       "diag": {
         "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
@@ -174,9 +174,9 @@
     {
       "q": "Will the Fed increase interest rates by 25 bps after the September 2026 meeting?",
       "slug": "will-the-fed-increase-interest-rates-by-25-bps-after-the-september-2026-meeting-649",
-      "stage": "B",
+      "stage": "C",
       "fails": [
-        "в источнике не найдено ни одного термина, названного в правилах"
+        "API 400: {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"model: String should have at least 1 character\"},\"request_id\":\"req_011CemtSoi5bqvZ1SWTZHqpJ\"}"
       ],
       "diag": {
         "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
