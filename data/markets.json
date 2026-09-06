@@ -1,6 +1,6 @@
 {
   "asof": "6 сентября 2026",
-  "generated": "2026-09-06T09:13:34.147Z",
+  "generated": "2026-09-06T12:33:59.358Z",
   "source": "Polymarket Gamma API",
   "kept": 20,
   "scanned": 600,
@@ -14,19 +14,19 @@
       "end": "2026-06-01",
       "cat": 0.04,
       "spread": 0.003,
-      "liq": 16739,
+      "liq": 18406,
       "flag": "дата прошла"
     },
     {
       "q": "Will Jesus Christ return before 2027?",
       "slug": "will-jesus-christ-return-before-2027",
-      "p": 0.014,
-      "q2": 0.986,
-      "vol": 65573194,
+      "p": 0.0145,
+      "q2": 0.9855,
+      "vol": 65573955,
       "end": "2027-01-01",
       "cat": 0.05,
-      "spread": 0.002,
-      "liq": 576038,
+      "spread": 0.001,
+      "liq": 576317,
       "flag": ""
     },
     {
@@ -34,11 +34,11 @@
       "slug": "will-the-us-invade-iran-before-2027",
       "p": 0.145,
       "q2": 0.855,
-      "vol": 64867329,
+      "vol": 64868271,
       "end": "2027-01-01",
       "cat": 0,
       "spread": 0.01,
-      "liq": 748528,
+      "liq": 695224,
       "flag": ""
     },
     {
@@ -50,7 +50,7 @@
       "end": "2026-06-01",
       "cat": 0.04,
       "spread": 0.011,
-      "liq": 12328,
+      "liq": 13416,
       "flag": "дата прошла"
     },
     {
@@ -62,7 +62,7 @@
       "end": "2026-06-01",
       "cat": 0.04,
       "spread": 0.005,
-      "liq": 23328,
+      "liq": 22910,
       "flag": "дата прошла"
     },
     {
@@ -70,11 +70,11 @@
       "slug": "will-china-invade-taiwan-before-2027",
       "p": 0.0375,
       "q2": 0.9625,
-      "vol": 40651350,
+      "vol": 40652224,
       "end": "2026-12-31",
       "cat": 0,
       "spread": 0.001,
-      "liq": 445336,
+      "liq": 443576,
       "flag": "правила размыты"
     },
     {
@@ -82,11 +82,11 @@
       "slug": "will-the-us-confirm-that-aliens-exist-before-2027-789-924-249",
       "p": 0.0375,
       "q2": 0.9625,
-      "vol": 38000454,
+      "vol": 38001177,
       "end": "2027-01-01",
       "cat": 0.05,
       "spread": 0.001,
-      "liq": 823248,
+      "liq": 755467,
       "flag": ""
     },
     {
@@ -94,11 +94,11 @@
       "slug": "will-trump-acquire-greenland-before-2027",
       "p": 0.0345,
       "q2": 0.9655,
-      "vol": 35418596,
+      "vol": 35419472,
       "end": "2027-01-01",
       "cat": 0.05,
       "spread": 0.001,
-      "liq": 222978,
+      "liq": 215909,
       "flag": ""
     },
     {
@@ -106,11 +106,11 @@
       "slug": "will-richard-grenell-be-the-leader-of-venezuela-end-of-2026",
       "p": 0.0005,
       "q2": 0.9995,
-      "vol": 32790711,
+      "vol": 32790723,
       "end": "2026-12-31",
       "cat": 0.05,
       "spread": 0.001,
-      "liq": 95312,
+      "liq": 94467,
       "flag": ""
     },
     {
@@ -122,7 +122,7 @@
       "end": "2026-06-01",
       "cat": 0.04,
       "spread": 0.008,
-      "liq": 19121,
+      "liq": 19392,
       "flag": "дата прошла"
     },
     {
@@ -130,11 +130,11 @@
       "slug": "will-the-fed-decrease-interest-rates-by-25-bps-after-the-september-2026-meeting-586",
       "p": 0.0035,
       "q2": 0.9965,
-      "vol": 30670870,
+      "vol": 30700917,
       "end": "2026-09-16",
       "cat": 0.04,
       "spread": 0.001,
-      "liq": 3196739,
+      "liq": 3201125,
       "flag": ""
     },
     {
@@ -146,7 +146,7 @@
       "end": "2026-06-01",
       "cat": 0.04,
       "spread": 0.006,
-      "liq": 19257,
+      "liq": 19653,
       "flag": "дата прошла"
     },
     {
@@ -158,7 +158,7 @@
       "end": "2026-06-01",
       "cat": 0.04,
       "spread": 0.003,
-      "liq": 21635,
+      "liq": 22037,
       "flag": "дата прошла"
     },
     {
@@ -166,11 +166,11 @@
       "slug": "will-frank-donovan-be-the-leader-of-venezuela-end-of-2026",
       "p": 0.0015,
       "q2": 0.9985,
-      "vol": 25810095,
+      "vol": 25810219,
       "end": "2026-12-31",
       "cat": 0.05,
       "spread": 0.001,
-      "liq": 172587,
+      "liq": 173227,
       "flag": ""
     },
     {
@@ -178,11 +178,11 @@
       "slug": "will-the-iranian-regime-fall-by-the-end-of-2026",
       "p": 0.065,
       "q2": 0.935,
-      "vol": 25633075,
+      "vol": 25633155,
       "end": "2027-01-01",
       "cat": 0.05,
       "spread": 0.01,
-      "liq": 655830,
+      "liq": 611840,
       "flag": ""
     },
     {
@@ -190,11 +190,11 @@
       "slug": "will-there-be-no-change-in-fed-interest-rates-after-the-september-2026-meeting-615",
       "p": 0.495,
       "q2": 0.505,
-      "vol": 23203369,
+      "vol": 23243718,
       "end": "2026-09-16",
       "cat": 0.04,
       "spread": 0.01,
-      "liq": 596668,
+      "liq": 456029,
       "flag": "монетка"
     },
     {
@@ -202,11 +202,11 @@
       "slug": "putin-out-before-2027-346",
       "p": 0.065,
       "q2": 0.935,
-      "vol": 20034749,
+      "vol": 20035180,
       "end": "2027-01-01",
       "cat": 0.04,
       "spread": 0.01,
-      "liq": 677934,
+      "liq": 635680,
       "flag": ""
     },
     {
@@ -214,11 +214,11 @@
       "slug": "will-the-fed-increase-interest-rates-by-25-bps-after-the-september-2026-meeting-649",
       "p": 0.505,
       "q2": 0.495,
-      "vol": 18556968,
+      "vol": 18592102,
       "end": "2026-09-16",
       "cat": 0.04,
       "spread": 0.01,
-      "liq": 580460,
+      "liq": 450405,
       "flag": "монетка"
     },
     {
@@ -226,11 +226,11 @@
       "slug": "strait-of-hormuz-traffic-returns-to-normal-by-august-31-20260702154212320",
       "p": 0.0005,
       "q2": 0.9995,
-      "vol": 18045382,
+      "vol": 18045884,
       "end": "2026-09-01",
       "cat": 0,
       "spread": 0.001,
-      "liq": 891285,
+      "liq": 890845,
       "flag": "дата прошла"
     },
     {
@@ -242,7 +242,7 @@
       "end": "2027-01-01",
       "cat": 0.05,
       "spread": 0.001,
-      "liq": 262260,
+      "liq": 263296,
       "flag": ""
     }
   ]
