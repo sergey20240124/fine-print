@@ -18,7 +18,7 @@
  */
 
 import fs from 'node:fs/promises';
-import { gateA, gateB, gateC, CRITERIA } from './gates.mjs';
+import { gateA, gateB, gateC, CRITERIA, GATE_CRITERIA } from './gates.mjs';
 
 const GAMMA = 'https://gamma-api.polymarket.com/markets';
 const WANT = Number(process.argv[2] || 120);
@@ -97,6 +97,7 @@ async function main() {
     stage_c_passed: passC,
     per_criterion: Object.fromEntries(Object.entries(perCriterion).map(([k, v]) => [k, {
       name: CRITERIA[k],
+      gate: k in GATE_CRITERIA,          // жёсткий критерий или измеряемый атрибут
       passed: v.pass,
       failed: v.fail,
       fail_rate: +(v.fail / (v.pass + v.fail) * 100).toFixed(1),
@@ -105,16 +106,20 @@ async function main() {
     verdict: null,
   };
 
-  const worst = Object.entries(out.per_criterion).sort((a, b) => b[1].fail_rate - a[1].fail_rate)[0];
+  const gates = Object.entries(out.per_criterion).filter(([, v]) => v.gate);
+  const worst = gates.sort((a, b) => b[1].fail_rate - a[1].fail_rate)[0];
+  const worstAttr = Object.entries(out.per_criterion).filter(([, v]) => !v.gate)
+    .sort((a, b) => b[1].fail_rate - a[1].fail_rate)[0];
   out.verdict = passA === 0
-    ? `Ни один из ${clean.length} чисто разрешившихся рынков не прошёл ворота A. Планка выше реальности. Больше всего отсекает: «${worst[1].name}» (${worst[1].fail_rate}%).`
-    : `Ворота A прошли ${passA} из ${clean.length} чисто разрешившихся рынков (${(passA / clean.length * 100).toFixed(1)}%). Планка достижима. Самый строгий критерий: «${worst[1].name}» (${worst[1].fail_rate}%).`;
+    ? `Ни один из ${clean.length} чисто разрешившихся рынков не прошёл жёсткие ворота. Планка выше реальности; самый строгий из ворот — «${worst[1].name}» (${worst[1].fail_rate}%).`
+    : `Жёсткие ворота прошли ${passA} из ${clean.length} чисто разрешившихся рынков (${(passA / clean.length * 100).toFixed(1)}%). Планка достижима. Самый строгий из ворот — «${worst[1].name}» (${worst[1].fail_rate}%)` +
+      (worstAttr ? `. Среди атрибутов чаще всего не выполняется «${worstAttr[1].name}» (${worstAttr[1].fail_rate}%), но он не отсеивает.` : '.');
 
   await fs.writeFile('data/calibration.json', JSON.stringify(out, null, 2) + '\n');
   console.log('\n' + out.verdict + '\n');
-  console.log('отказы по критериям:');
+  console.log('отказы по критериям (В — ворота, а — атрибут):');
   for (const [, v] of Object.entries(out.per_criterion).sort((a, b) => b[1].fail_rate - a[1].fail_rate))
-    console.log(`  ${String(v.fail_rate).padStart(5)}%  ${v.name}`);
+    console.log(`  ${v.gate ? 'В' : 'а'} ${String(v.fail_rate).padStart(5)}%  ${v.name}`);
   console.log(`\nстадия B прошла: ${passB} из ${passA}`);
   if (passC !== null) console.log(`стадия C прошла: ${passC} из ${cRows.length}`);
 }

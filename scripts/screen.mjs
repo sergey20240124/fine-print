@@ -58,7 +58,7 @@ async function main() {
 
     results.push({
       ...base, stage: 'C', pass: c.pass, skipped: c.skipped || false,
-      fails: c.fails, ev: { ...a.ev, ...b.ev }, resolver: c.ev,
+      fails: c.fails, attrs: a.attrs, ev: { ...a.ev, ...b.ev }, resolver: c.ev,
       market: { p: m.p, q2: m.q2, vol: m.vol, end: m.end, cat: m.cat, spread: m.spread },
     });
   }
@@ -69,7 +69,7 @@ async function main() {
     model: process.env.ANTHROPIC_API_KEY ? (process.env.MODEL || 'claude-opus-5') : null,
     checked: results.length,
     passed: shortlist.length,
-    note: 'Пустой шортлист — нормальный результат. Достижима ли планка вообще, отвечает scripts/calibrate.mjs, а не догадки.',
+    note: 'Пустой шортлист — нормальный результат. Достижима ли планка вообще, отвечает scripts/calibrate.mjs, а не догадки. Ворота жёсткие только по трём критериям; остальное — атрибуты, они показываются на карточке, но не отсеивают.',
     shortlist,
     rejected: results.filter(r => !r.pass).map(({ q, slug, stage, fails, ev }) => ({
       q, slug, stage, fails,
