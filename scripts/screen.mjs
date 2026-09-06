@@ -56,9 +56,16 @@ async function main() {
       end_date: m.end,
     });
 
+    /* Ненайденный термин источника — тоже предупреждение, а не отказ:
+       стадия B не может отличить «поля нет» от «поле за запросом». */
+    const attrs = [...a.attrs];
+    if (b.ev.terms_missing)
+      attrs.push({ key: 'terms', note: 'названный в правилах термин в источнике не найден: '
+                                       + (b.ev.quoted_terms || []).join(', ') });
+
     results.push({
       ...base, stage: 'C', pass: c.pass, skipped: c.skipped || false,
-      fails: c.fails, attrs: a.attrs, ev: { ...a.ev, ...b.ev }, resolver: c.ev,
+      fails: c.fails, attrs, ev: { ...a.ev, ...b.ev }, resolver: c.ev,
       market: { p: m.p, q2: m.q2, vol: m.vol, end: m.end, cat: m.cat, spread: m.spread },
     });
   }
