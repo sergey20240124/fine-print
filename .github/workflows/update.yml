@@ -35,12 +35,12 @@ jobs:
       - name: Закоммитить, если что-то изменилось
         if: github.event_name != 'push'
         run: |
-          if git diff --quiet -- data/markets.json; then
+          git config user.name  "fine-print-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/markets.json
+          if git diff --cached --quiet -- data/markets.json; then
             echo "изменений нет — коммит не нужен"
           else
-            git config user.name  "fine-print-bot"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add data/markets.json
             git commit -m "скан: $(date -u +%Y-%m-%d)"
             git push
           fi
@@ -59,14 +59,16 @@ jobs:
       - name: Закоммитить шортлист
         if: github.event_name != 'push'
         run: |
-          if git diff --quiet -- data/shortlist.json 2>/dev/null && [ -f data/shortlist.json ]; then
+          # git diff --quiet НЕ видит неотслеживаемые файлы и всегда успешен
+          # для нового файла — поэтому сначала add, потом проверка индекса.
+          git config user.name  "fine-print-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/shortlist.json
+          if git diff --cached --quiet -- data/shortlist.json; then
             echo "шортлист не изменился"
           else
-            git config user.name  "fine-print-bot"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add data/shortlist.json || true
-            git commit -m "отбор: $(date -u +%Y-%m-%d)" || echo "нечего коммитить"
-            git push || true
+            git commit -m "отбор: $(date -u +%Y-%m-%d)"
+            git push
           fi
 
       - uses: actions/configure-pages@v5
