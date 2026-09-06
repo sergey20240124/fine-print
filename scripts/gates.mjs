@@ -263,8 +263,11 @@ const norm = s => String(s).toLowerCase()
   .replace(/\s+/g, ' ').trim();
 
 export async function gateC(desc, meta = {}, opts = {}) {
-  const KEY = opts.key ?? process.env.ANTHROPIC_API_KEY ?? '';
-  const MODEL = opts.model ?? process.env.MODEL ?? 'claude-opus-5';
+  /* Именно || , а не ?? : незаданная переменная workflow приходит ПУСТОЙ
+     строкой, а не undefined, и ?? её пропускает — API отвечает
+     «model: String should have at least 1 character». */
+  const KEY = (opts.key || process.env.ANTHROPIC_API_KEY || '').trim();
+  const MODEL = (opts.model || process.env.MODEL || '').trim() || 'claude-opus-5';
   if (!KEY) return { pass: false, skipped: true, fails: ['ANTHROPIC_API_KEY не задан'], ev: {} };
 
   const metaBlock = Object.entries(meta).filter(([, v]) => v != null)
