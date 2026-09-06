@@ -115,8 +115,8 @@ async function main() {
     passed: shortlist.length,
     note: 'Пустой шортлист — нормальный результат. Достижима ли планка вообще, отвечает scripts/calibrate.mjs, а не догадки. Ворота жёсткие только по трём критериям; остальное — атрибуты, они показываются на карточке, но не отсеивают.',
     shortlist: shortlist.sort((a, b) => (b.attention?.score || 0) - (a.attention?.score || 0)),
-    rejected: results.filter(r => !r.pass).map(({ q, slug, stage, fails, ev }) => ({
-      q, slug, stage, fails,
+    rejected: results.filter(r => !r.pass).map(({ q, slug, stage, fails, ev, attention }) => ({
+      q, slug, stage, fails, attention,
       ...(stage !== 'A' && ev ? { diag: {
         source_url: ev.source_url, http: ev.http, content_type: ev.content_type,
         is_data: ev.is_data, is_shell: ev.is_shell, terms_found: ev.terms_found,
