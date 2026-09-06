@@ -1,13 +1,15 @@
 {
-  "generated": "2026-09-06T09:04:23.795Z",
+  "generated": "2026-09-06T09:17:10.676Z",
   "model": "claude-opus-5",
-  "checked": 20,
+  "checked": 300,
+  "gates_passed": 37,
+  "resolver_calls": 12,
   "passed": 3,
   "note": "Пустой шортлист — нормальный результат. Достижима ли планка вообще, отвечает scripts/calibrate.mjs, а не догадки. Ворота жёсткие только по трём критериям; остальное — атрибуты, они показываются на карточке, но не отсеивают.",
   "shortlist": [
     {
-      "q": "Will the Fed decrease interest rates by 25 bps after the September 2026 meeting?",
-      "slug": "will-the-fed-decrease-interest-rates-by-25-bps-after-the-september-2026-meeting-586",
+      "q": "Will Michael be the top grossing movie of 2026?",
+      "slug": "will-michael-be-the-top-grossing-movie-of-2026",
       "stage": "C",
       "pass": true,
       "skipped": false,
@@ -20,83 +22,95 @@
         {
           "key": "missing",
           "note": "не описано, что делать при отсутствии данных"
-        },
-        {
-          "key": "terms",
-          "note": "названный в правилах термин в источнике не найден: No change"
         }
       ],
+      "attention": {
+        "score": 0.4644,
+        "neglect": 0.464,
+        "tradeable": 1,
+        "spread_ok": 1,
+        "why": "умеренное внимание"
+      },
       "ev": {
-        "uma_statuses": "[]",
+        "uma_statuses": null,
         "escape_found": [],
-        "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+        "source_url": "https://www.boxofficemojo.com/year/2026/?grossesOption=calendarGrosses",
         "threshold_words": [],
         "missing_data_words": [],
-        "end_date": "2026-09-16",
-        "latest_date_in_rules": null,
+        "end_date": "2026-12-31",
+        "latest_date_in_rules": "2027-01-07",
         "http": 200,
-        "content_type": "text/html",
-        "bytes": 164826,
+        "content_type": "text/html;charset=utf-8",
+        "bytes": 456437,
         "is_data": false,
         "is_shell": false,
         "quoted_terms": [
-          "No change"
+          "Gross"
         ],
-        "terms_found": [],
-        "terms_missing": true
+        "terms_found": [
+          "Gross"
+        ],
+        "terms_missing": false
       },
       "resolver": {
         "executable": true,
         "inputs": [
           {
-            "name": "upper_bound_before_september_2026_meeting",
-            "field": "Верхняя граница целевого диапазона ставки по федеральным фондам, действовавшая непосредственно до заседания FOMC 15-16 сентября 2026 г.",
-            "quote": "The FED interest rates are defined in this market by the upper bound of the target federal funds range.",
-            "source_url": "https://www.federalreserve.gov/monetarypolicy/openmarket.htm"
+            "name": "Таблица Box Office Mojo, годовой календарный сбор 2026, столбец \"Gross\"",
+            "field": "Gross",
+            "quote": "This market will resolve according to the title of the film with the highest 2026 gross according to the \"Gross\" column on https://www.boxofficemojo.com/year/2026/?grossesOption=calendarGrosses once data for December 31 is made available.",
+            "source_url": "https://www.boxofficemojo.com/year/2026/?grossesOption=calendarGrosses"
           },
           {
-            "name": "upper_bound_after_september_2026_statement",
-            "field": "Верхняя граница целевого диапазона ставки по федеральным фондам, объявленная в заявлении FOMC по итогам заседания 15-16 сентября 2026 г.",
-            "quote": "The resolution source for this market is the FOMC’s statement after its meeting scheduled for September 15-16, 2026 according to the official calendar: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm.",
-            "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"
+            "name": "Столбец \"Release\" (название фильма) той же таблицы — сравнение с \"Michael\"",
+            "field": "Release/Title",
+            "quote": "the title of the film with the highest 2026 gross",
+            "source_url": "https://www.boxofficemojo.com/year/2026/?grossesOption=calendarGrosses"
           },
           {
-            "name": "statement_released_flag",
-            "field": "Факт публикации заявления FOMC по сентябрьскому заседанию 2026 г. до окончания следующего запланированного заседания",
-            "quote": "If no statement is released by the end date of the next scheduled meeting, this market will resolve to the \"No change\" bracket.",
-            "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"
+            "name": "Ограничение периода: только календарные сборы 2026 года",
+            "field": "grossesOption=calendarGrosses",
+            "quote": "This market is about the movie's domestic calendar gross in 2026 - dates outside of 2026 will not count toward this movie's gross."
           },
           {
-            "name": "market_bracket",
-            "field": "Бракет данного рынка из слага: снижение на 25 б.п.",
-            "quote": "This market will resolve to the amount of basis points the upper bound of the target federal funds rate is changed by versus the level it was prior to the Federal Reserve's September 2026 meeting."
+            "name": "Правило разрешения точного равенства",
+            "field": "tie-break",
+            "quote": "In the event of an exact tie the film that comes first alphabetically will be considered the winner."
+          },
+          {
+            "name": "Крайний срок наличия финальных данных",
+            "field": "deadline",
+            "quote": "If there is no final data available by January 7, 2027, 11:59 PM ET, another credible resolution source will be chosen."
           }
         ],
         "procedure": [
-          "1. Считать со страницы https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm и с раздела пресс-релизов ФРС факт публикации заявления FOMC по заседанию 15-16 сентября 2026 г.",
-          "2. Если заявление не опубликовано до конца даты следующего запланированного заседания FOMC (по официальному календарю), присвоить итоговому бракету значение 'No change' и перейти к шагу 7.",
-          "3. Извлечь из заявления FOMC от 16 сентября 2026 г. числовое значение верхней границы целевого диапазона ставки по федеральным фондам (U_after), в процентах.",
-          "4. Извлечь с https://www.federalreserve.gov/monetarypolicy/openmarket.htm значение верхней границы целевого диапазона, действовавшее непосредственно до заседания 15-16 сентября 2026 г. (U_before).",
-          "5. Вычислить delta_bps = (U_after - U_before) * 100.",
-          "6. Округлить |delta_bps| ВВЕРХ до ближайшего кратного 25 (ceil(|delta_bps|/25)*25), сохранив знак delta_bps; полученное значение = итоговый бракет (0 => 'No change', -25 => 'снижение на 25 б.п.', и т.д.).",
-          "7. Сравнить итоговый бракет с бракетом рынка (снижение на 25 б.п., т.е. -25): при совпадении вернуть Yes, иначе No."
+          "1. После 31.12.2026 (и не позднее 07.01.2027 23:59 ET) загрузить страницу https://www.boxofficemojo.com/year/2026/?grossesOption=calendarGrosses.",
+          "2. Проверить, что таблица содержит данные, включающие 31 декабря 2026 (режим calendarGrosses, год 2026). Если нет — опрашивать страницу повторно раз в час до 07.01.2027 23:59 ET.",
+          "3. Считать все строки таблицы; для каждой строки извлечь пару (Release, Gross), очистив Gross от символов '$' и разделителей-запятых и приведя к целому числу.",
+          "4. Найти максимум значения Gross по всем строкам.",
+          "5. Собрать множество строк, у которых Gross строго равен этому максимуму.",
+          "6. Если таких строк более одной — отсортировать их названия (Release) лексикографически по возрастанию (сравнение строк по кодовым точкам после приведения к верхнему регистру) и взять первое.",
+          "7. Полученное единственное название обозначить как WINNER.",
+          "8. Сравнить WINNER с строкой 'Michael' посредством точного посимвольного равенства без учёта регистра и ведущих/замыкающих пробелов.",
+          "9. Если совпадает — YES; иначе — NO.",
+          "10. Если к 07.01.2027 23:59 ET шаг 2 не выполнен (страница недоступна или данные за 2026 год отсутствуют) — применяется missing_data_rule."
         ],
-        "comparison": "Yes тогда и только тогда, когда округлённое вверх до кратного 25 изменение верхней границы целевого диапазона по итогам заседания FOMC 15-16 сентября 2026 г. равно -25 базисным пунктам; во всех остальных случаях (включая 'No change' при отсутствии заявления) — No.",
-        "missing_data_rule": "Если заявление FOMC по сентябрьскому заседанию 2026 г. не опубликовано до конца даты следующего запланированного заседания, рынок разрешается в бракет 'No change' — для данного рынка (-25 б.п.) это No. Прямая цитата: \\\"If no statement is released by the end date of the next scheduled meeting, this market will resolve to the 'No change' bracket.\\\"",
-        "human_judgment_required": null
+        "comparison": "WINNER (название строки с максимальным числовым значением столбца Gross в таблице BoxOfficeMojo year/2026 calendarGrosses, при равенстве — первое по алфавиту) == \\\"Michael\\\" → YES, иначе NO",
+        "human_judgment_required": null,
+        "missing_data_rule": "Основной источник — фиксированный URL Box Office Mojo (year/2026, grossesOption=calendarGrosses); опрос ежечасно с 01.01.2027 до 07.01.2027 23:59 ET. Оговорка «another credible resolution source will be chosen» влияет только на срок/канал получения того же ряда данных (домашние календарные сборы 2026), а не на исход; при полной недоступности данных к 07.01.2027 применяется резервный источник The Numbers (https://www.the-numbers.com/market/2026/top-grossing-movies) с тем же алгоритмом шагов 3–9."
       },
       "market": {
-        "p": 0.0035,
-        "q2": 0.9965,
-        "vol": 30670110,
-        "end": "2026-09-16",
-        "cat": 0.04,
+        "p": 0.0005,
+        "q2": 0.9995,
+        "vol": 1321129,
+        "end": "2026-12-31",
+        "cat": 0.05,
         "spread": 0.001
       }
     },
     {
-      "q": "Will there be no change in Fed interest rates after the September 2026 meeting?",
-      "slug": "will-there-be-no-change-in-fed-interest-rates-after-the-september-2026-meeting-615",
+      "q": "Will Rodri win the 2026 Ballon d'Or?",
+      "slug": "will-rodri-win-the-2026-ballon-dor",
       "stage": "C",
       "pass": true,
       "skipped": false,
@@ -111,182 +125,172 @@
           "note": "не описано, что делать при отсутствии данных"
         },
         {
-          "key": "terms",
-          "note": "названный в правилах термин в источнике не найден: No change"
+          "key": "dates",
+          "note": "срок в правилах дальше даты на карточке: 2026-12-31 против 2026-10-31"
         }
       ],
+      "attention": {
+        "score": 0.4552,
+        "neglect": 0.455,
+        "tradeable": 1,
+        "spread_ok": 1,
+        "why": "умеренное внимание"
+      },
       "ev": {
-        "uma_statuses": "[]",
+        "uma_statuses": null,
         "escape_found": [],
-        "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+        "source_url": "https://www.francefootball.fr/",
         "threshold_words": [],
         "missing_data_words": [],
-        "end_date": "2026-09-16",
-        "latest_date_in_rules": null,
+        "end_date": "2026-10-31",
+        "latest_date_in_rules": "2026-12-31",
         "http": 200,
-        "content_type": "text/html",
-        "bytes": 164826,
+        "content_type": "text/html; charset=utf-8",
+        "bytes": 162591,
         "is_data": false,
         "is_shell": false,
-        "quoted_terms": [
-          "No change"
-        ],
+        "quoted_terms": [],
         "terms_found": [],
-        "terms_missing": true
+        "terms_missing": false
       },
       "resolver": {
         "executable": true,
         "inputs": [
           {
-            "name": "Верхняя граница целевого диапазона ставки по федеральным фондам до сентябрьского заседания 2026 г.",
-            "field": "upper_bound_prior",
-            "quote": "The FED interest rates are defined in this market by the upper bound of the target federal funds range.",
-            "source_url": "https://www.federalreserve.gov/monetarypolicy/openmarket.htm"
+            "name": "Официально объявленный победитель мужского Ballon d'Or 2026",
+            "field": "winner_name",
+            "quote": "This market will resolve according to the winner of the 2026 Ballon d’Or.",
+            "source_url": "https://www.francefootball.fr/"
           },
           {
-            "name": "Верхняя граница целевого диапазона после заседания FOMC 15-16 сентября 2026 г.",
-            "field": "upper_bound_after",
-            "quote": "This market will resolve to the amount of basis points the upper bound of the target federal funds rate is changed by versus the level it was prior to the Federal Reserve's September 2026 meeting.",
-            "source_url": "https://www.federalreserve.gov/monetarypolicy/openmarket.htm"
+            "name": "Факт объявления победителя до дедлайна",
+            "field": "declaration_datetime",
+            "quote": "If no 2026 Ballon d’Or winner is declared by December 31, 2026, 11:59 PM ET, this market will resolve to \"Other\".",
+            "source_url": "https://www.francefootball.fr/"
           },
           {
-            "name": "Заявление FOMC по итогам заседания 15-16 сентября 2026 г. (факт публикации и дата)",
-            "field": "fomc_statement_published",
-            "quote": "The resolution source for this market is the FOMC’s statement after its meeting scheduled for September 15-16, 2026 according to the official calendar: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm.",
-            "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"
+            "name": "Источник разрешения",
+            "field": "source",
+            "quote": "The primary resolution source for this market is official information from France Football (https://www.francefootball.fr/).",
+            "source_url": "https://www.francefootball.fr/"
           },
           {
-            "name": "Дата следующего запланированного заседания FOMC по официальному календарю",
-            "field": "next_meeting_end_date",
-            "quote": "If no statement is released by the end date of the next scheduled meeting, this market will resolve to the \"No change\" bracket.",
-            "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"
-          },
-          {
-            "name": "Правило округления изменения ставки",
-            "field": "rounding_rule",
-            "quote": "If the target federal funds rate is changed to a level not expressed in the displayed options, the change will be rounded up to the nearest 25 and will resolve to the relevant bracket. (e.g. if there's a cut/increase of 12.5 bps it will be considered to be 25 bps)"
-          },
-          {
-            "name": "Метаданные рынка: end_date = 2026-09-16 (дата дедлайна)",
-            "field": "market_end_date",
-            "quote": "This market may resolve as soon as the FOMC’s statement for their September meeting with relevant data is issued."
+            "name": "Субъект рынка (из slug)",
+            "field": "market_subject",
+            "quote": "This market will resolve according to the winner of the 2026 Ballon d’Or.",
+            "source_url": "slug: will-rodri-win-the-2026-ballon-dor"
           }
         ],
         "procedure": [
-          "1. Зафиксировать U_prior = верхняя граница целевого диапазона федеральных фондов, действовавшая непосредственно перед заседанием FOMC 15-16 сентября 2026 г., по таблице на https://www.federalreserve.gov/monetarypolicy/openmarket.htm (последняя запись с датой вступления в силу < 2026-09-16).",
-          "2. В дату дедлайна 2026-09-16 (и далее при необходимости) проверить наличие на federalreserve.gov заявления FOMC по итогам заседания 15-16 сентября 2026 г. (пресс-релиз monetary policy statement с датой 2026-09-16).",
-          "3. Если заявление опубликовано: извлечь из него объявленную верхнюю границу целевого диапазона U_after (числовое значение в процентах, напр. 'target range for the federal funds rate at X to Y percent' → U_after = Y). Сверить с записью на странице openmarket.htm; при расхождении использовать заявление FOMC как приоритетный источник (прямо назван resolution source).",
-          "4. Вычислить delta_bps = (U_after − U_prior) × 100.",
-          "5. Если delta_bps = 0 → исход 'No change' → рынок 'Will there be no change...' резолвится Yes.",
-          "6. Если delta_bps ≠ 0 → округлить |delta_bps| вверх до ближайшего кратного 25 и присвоить соответствующий бракет со знаком (cut/increase); исход рынка 'No change' = No.",
-          "7. Если по состоянию на дату окончания следующего запланированного по официальному календарю заседания FOMC (следующая после 15-16 сентября 2026 г. дата в https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm) никакое заявление за сентябрьское заседание не опубликовано → присвоить бракет 'No change' → Yes. До этого момента рынок остаётся неразрешённым (влияет только на срок, не на исход)."
+          "1. В дату дедлайна (2026-10-31; при отсутствии объявления — ожидание до контрольной точки 2026-12-31 23:59 ET, заданной правилами) обратиться к официальному сайту France Football (https://www.francefootball.fr/) и найти публикацию об объявлении победителя Ballon d'Or 2026 (мужская награда).",
+          "2. Если на 2026-12-31 23:59 ET публикация об объявленном победителе Ballon d'Or 2026 отсутствует — вернуть No (исход 'Other' для контракта 'Rodri').",
+          "3. Если публикация есть — извлечь строку имени победителя (winner_name) из официального сообщения France Football.",
+          "4. Нормализовать строку: привести к нижнему регистру, удалить диакритику и лишние пробелы.",
+          "5. Сравнить нормализованное имя с эталоном 'rodri' / 'rodrigo hernandez cascante' (испанский полузащитник Manchester City, субъект рынка по slug).",
+          "6. Совпадение -> Yes; иное имя -> No."
         ],
-        "comparison": "delta_bps = (U_after − U_prior) × 100; Yes тогда и только тогда, когда delta_bps == 0, либо когда заявление не выпущено к дате окончания следующего запланированного заседания FOMC (fallback → 'No change'). Иначе No.",
-        "missing_data_rule": "Правила содержат явную оговорку: при отсутствии заявления к дате окончания следующего запланированного заседания исход = 'No change' (Yes). Если страница openmarket.htm недоступна, U_prior и U_after берутся из соответствующих пресс-релизов FOMC на federalreserve.gov (июльское/сентябрьское заявления) — оба значения публикуются дословно в тексте заявления.",
+        "comparison": "winner_name (нормализованное) == 'rodri' / 'rodrigo hernandez cascante' -> Yes; любое другое объявленное имя -> No; отсутствие объявления на 2026-12-31 23:59 ET -> No",
+        "missing_data_rule": "Если официальный сайт France Football недоступен или не содержит объявления к 2026-12-31 23:59 ET, применяется прямая оговорка правил: победитель считается не объявленным, исход 'Other' -> No. Дискреция касается только срока (ожидание с 2026-10-31 до 2026-12-31), но не исхода.",
         "human_judgment_required": null
       },
       "market": {
-        "p": 0.495,
-        "q2": 0.505,
-        "vol": 23202860,
-        "end": "2026-09-16",
-        "cat": 0.04,
+        "p": 0.055,
+        "q2": 0.945,
+        "vol": 1419713,
+        "end": "2026-10-31",
+        "cat": 0.05,
         "spread": 0.01
       }
     },
     {
-      "q": "Will the Fed increase interest rates by 25 bps after the September 2026 meeting?",
-      "slug": "will-the-fed-increase-interest-rates-by-25-bps-after-the-september-2026-meeting-649",
+      "q": "US recession by end of 2026?",
+      "slug": "us-recession-by-end-of-2026",
       "stage": "C",
       "pass": true,
       "skipped": false,
       "fails": [],
       "attrs": [
         {
-          "key": "threshold",
-          "note": "нет сравнения с порогом"
-        },
-        {
           "key": "missing",
           "note": "не описано, что делать при отсутствии данных"
-        },
-        {
-          "key": "terms",
-          "note": "названный в правилах термин в источнике не найден: No change"
         }
       ],
+      "attention": {
+        "score": 0.4298,
+        "neglect": 0.43,
+        "tradeable": 1,
+        "spread_ok": 1,
+        "why": "умеренное внимание"
+      },
       "ev": {
-        "uma_statuses": "[]",
+        "uma_statuses": null,
         "escape_found": [],
-        "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
-        "threshold_words": [],
+        "source_url": "https://www.bea.gov/data/gdp/gross-domestic-product",
+        "threshold_words": [
+          "less than"
+        ],
         "missing_data_words": [],
-        "end_date": "2026-09-16",
-        "latest_date_in_rules": null,
+        "end_date": "2027-01-31",
+        "latest_date_in_rules": "2026-12-31",
         "http": 200,
-        "content_type": "text/html",
-        "bytes": 164826,
+        "content_type": "text/html; charset=utf-8",
+        "bytes": 54815,
         "is_data": false,
         "is_shell": false,
-        "quoted_terms": [
-          "No change"
-        ],
+        "quoted_terms": [],
         "terms_found": [],
-        "terms_missing": true
+        "terms_missing": false
       },
       "resolver": {
         "executable": true,
         "inputs": [
           {
-            "name": "Верхняя граница целевого диапазона ставки ФРС до сентябрьского заседания 2026 г.",
-            "field": "upper_bound_target_range_pre_meeting",
-            "quote": "The FED interest rates are defined in this market by the upper bound of the target federal funds range.",
-            "source_url": "https://www.federalreserve.gov/monetarypolicy/openmarket.htm"
+            "name": "BEA quarterly real GDP, seasonally adjusted annualized percent change from preceding quarter (advance and latest estimates), Q2 2025 through Q4 2026",
+            "field": "percent change from preceding quarter, real GDP, SAAR",
+            "quote": "The seasonally adjusted annualized percent change in quarterly U.S. real GDP from the previous quarter is less than 0.0 for two consecutive quarters between Q2 2025 and Q4 2026 (inclusive), as reported by the Bureau of Economic Analysis (BEA).",
+            "source_url": "https://www.bea.gov/data/gdp/gross-domestic-product"
           },
           {
-            "name": "Верхняя граница целевого диапазона по заявлению FOMC после заседания 15-16 сентября 2026 г.",
-            "field": "upper_bound_target_range_post_meeting",
-            "quote": "The resolution source for this market is the FOMC’s statement after its meeting scheduled for September 15-16, 2026 according to the official calendar: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm.",
-            "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"
+            "name": "Rule that advance estimates count as reported values",
+            "field": "estimate vintage selection",
+            "quote": "Note that advance estimates will be considered. For example, if upon release, the advance estimate for Q3 2025 was negative, and the Q2 2025's most recent, up-to-date estimate was also negative, this market would resolve to \"Yes\".",
+            "source_url": "https://www.bea.gov/data/gdp/gross-domestic-product"
           },
           {
-            "name": "Факт выпуска заявления FOMC по сентябрьскому заседанию",
-            "field": "statement_issued_flag",
-            "quote": "This market may resolve as soon as the FOMC’s statement for their September meeting with relevant data is issued.",
-            "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"
+            "name": "NBER public announcement of a US recession occurring during 2025 or 2026",
+            "field": "presence of NBER announcement on official NBER site",
+            "quote": "The National Bureau of Economic Research (NBER) publicly announces that a recession has occurred in the United States, at any point during 2025 or 2026, with the announcement made by the time the BEA releases the advance estimate for Q4 2026.",
+            "source_url": "https://www.nber.org/research/business-cycle-dating"
           },
           {
-            "name": "Дата окончания следующего запланированного заседания FOMC (fallback-срок)",
-            "field": "next_scheduled_meeting_end_date",
-            "quote": "If no statement is released by the end date of the next scheduled meeting, this market will resolve to the \"No change\" bracket.",
-            "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"
+            "name": "Cutoff event: BEA release of advance estimate for Q4 2026",
+            "field": "release date of Q4 2026 advance estimate",
+            "quote": "this market will stay open until the Advance estimate of Q4 2026 is published, at which point it will resolve to \"Yes\" if Q4 2026 was negative or if the NBER declares a recession by then",
+            "source_url": "https://www.bea.gov/data/gdp/gross-domestic-product"
           },
           {
-            "name": "Бракет данного рынка (+25 б.п. повышение)",
-            "field": "market_bracket",
-            "quote": "This market will resolve to the amount of basis points the upper bound of the target federal funds rate is changed by versus the level it was prior to the Federal Reserve's September 2026 meeting."
+            "name": "Default outcome",
+            "field": "fallback",
+            "quote": "Otherwise, this market will resolve to \"No\"."
           }
         ],
         "procedure": [
-          "1. Зафиксировать P = верхняя граница целевого диапазона ставки по федеральным фондам, действовавшая непосредственно перед заседанием FOMC 15-16 сентября 2026 г., по таблице на https://www.federalreserve.gov/monetarypolicy/openmarket.htm (в базисных пунктах).",
-          "2. После 2026-09-16 запросить страницу заявлений FOMC (federalreserve.gov) и проверить, опубликовано ли заявление по итогам заседания 15-16 сентября 2026 г.",
-          "3. Если заявление НЕ опубликовано к дате окончания следующего запланированного заседания FOMC по официальному календарю — разрешить рынок в бракет 'No change', то есть для данного рынка (+25 bps увеличение) исход = No. Конец.",
-          "4. Если заявление опубликовано, извлечь из его текста N = верхняя граница нового целевого диапазона федеральных фондов (в базисных пунктах); при расхождении использовать значение из таблицы openmarket.htm за дату 2026-09-16.",
-          "5. Вычислить D = N − P (в базисных пунктах, со знаком).",
-          "6. Округлить |D| ВВЕРХ до ближайшего кратного 25: R = 25 * ceil(|D| / 25). Знак сохранить: S = sign(D).",
-          "7. Сформировать итоговый бракет: если D = 0 → 'No change'; если S = +1 → 'increase R bps'; если S = −1 → 'decrease R bps'.",
-          "8. Сравнить итоговый бракет с бракетом данного рынка: 'increase 25 bps'.",
-          "9. Вернуть Yes, если бракет совпал; иначе No."
+          "1. Дождаться публикации BEA предварительной (advance) оценки ВВП за Q4 2026 (ожидается конец января 2027; метаданные рынка: end_date = 2027-01-31). Зафиксировать момент этой публикации T как момент разрешения.",
+          "2. Построить массив значений G[q] для q = Q2 2025, Q3 2025, Q4 2025, Q1 2026, Q2 2026, Q3 2026, Q4 2026: для каждого квартала взять последнюю опубликованную BEA на момент T оценку сезонно скорректированного годового процентного изменения реального ВВП к предыдущему кварталу (для Q4 2026 это advance-оценка; правило прямо предписывает учитывать advance-оценки).",
+          "3. Проверить условие 1: существует ли пара соседних кварталов (q, q+1) внутри диапазона Q2 2025 – Q4 2026, для которой G[q] < 0.0 И G[q+1] < 0.0. Сравнение чисто числовое с порогом 0.0.",
+          "4. Проверить условие 2: опубликовано ли на официальном сайте NBER (Business Cycle Dating Committee announcements, https://www.nber.org/research/business-cycle-dating) до момента T объявление, датирующее пик (начало рецессии) / наличие рецессии в США в какой-либо момент 2025 или 2026 календарных годов. Проверяется факт наличия такого датируемого объявления в официальном списке дат делового цикла NBER, где объявленный период рецессии пересекается с интервалом 2025-01-01 – 2026-12-31.",
+          "5. Если истинно условие шага 3 ИЛИ условие шага 4 → Yes.",
+          "6. Иначе → No."
         ],
-        "comparison": "Yes тогда и только тогда, когда (N − P) > 0 и 25*ceil((N − P)/25) = 25, то есть 0 &lt; N − P ≤ 25 б.п. по заявлению FOMC от 16.09.2026; во всех иных случаях, включая отсутствие заявления к концу следующего заседания (fallback 'No change'), — No.",
-        "missing_data_rule": "Если заявление FOMC по сентябрьскому заседанию не выпущено к дате окончания следующего запланированного заседания по официальному календарю ФРС — рынок разрешается в бракет 'No change' (для данного контракта = No). Значения P и N берутся из явно названных официальных источников ФРС; при их временной недоступности разрешение откладывается до восстановления доступа, что влияет только на срок, но не на исход.",
+        "comparison": "Yes, если (∃ соседняя пара кварталов в [Q2 2025 … Q4 2026] с G < 0.0 у обоих, по последним оценкам BEA на момент выхода advance-оценки Q4 2026) ИЛИ (NBER до этого момента официально объявил рецессию, чей период пересекается с 2025–2026); иначе No.",
+        "missing_data_rule": "Если BEA задерживает публикацию advance-оценки Q4 2026 (например, из-за приостановки работы правительства), разрешение откладывается до фактической публикации — это влияет только на срок, не на исход. Если по какому-либо кварталу оценка не опубликована вовсе, соответствующее значение не считается отрицательным (условие 1 по этой паре не выполняется). Отсутствие объявления NBER трактуется как невыполнение условия 2.",
         "human_judgment_required": null
       },
       "market": {
-        "p": 0.505,
-        "q2": 0.495,
-        "vol": 18556953,
-        "end": "2026-09-16",
+        "p": 0.065,
+        "q2": 0.935,
+        "vol": 1731709,
+        "end": "2027-01-31",
         "cat": 0.04,
         "spread": 0.01
       }
@@ -450,6 +454,2665 @@
         "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of",
         "в правилах нет ссылки на источник"
       ]
+    },
+    {
+      "q": "Will Tarcisio de Freitas win the 2026 Brazilian presidential election?",
+      "slug": "will-tarcisio-de-frietas-win-the-2026-brazilian-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Clarity Act (H.R.3633) signed into law in 2026?",
+      "slug": "clarity-act-signed-into-law-in-2026",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: credible reporting"
+      ]
+    },
+    {
+      "q": "Will Alesa Mengesha be the next Prime Minister of Ethiopia?",
+      "slug": "will-alesa-mengesha-be-the-next-prime-minister-of-ethiopia",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Xi Jinping out before 2027?",
+      "slug": "xi-jinping-out-before-2027",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Oliver Bearman be the 2026 F1 Drivers' Champion?",
+      "slug": "will-oliver-bearman-be-the-2026-f1-drivers-champion",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Renan Santos win the 2026 Brazilian presidential election?",
+      "slug": "will-renan-santos-win-the-2026-brazilian-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Franco Colapinto be the 2026 F1 Drivers' Champion?",
+      "slug": "will-franco-colapinto-be-the-2026-f1-drivers-champion",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Valtteri Bottas be the 2026 F1 Drivers' Champion?",
+      "slug": "will-valtteri-bottas-be-the-2026-f1-drivers-champion",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Arvid Lindblad be the 2026 F1 Drivers' Champion?",
+      "slug": "will-arvid-lindblad-be-the-2026-f1-drivers-champion",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Alexander Albon be the 2026 F1 Drivers' Champion?",
+      "slug": "will-alexander-albon-be-the-2026-f1-drivers-champion",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Sergio Pérez be the 2026 F1 Drivers' Champion?",
+      "slug": "will-sergio-prez-be-the-2026-f1-drivers-champion",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Lance Stroll be the 2026 F1 Drivers' Champion?",
+      "slug": "will-lance-stroll-be-the-2026-f1-drivers-champion",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Reza Pahlavi lead Iran in 2026?",
+      "slug": "will-reza-pahlavi-lead-iran-in-2026",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Pierre Gasly be the 2026 F1 Drivers' Champion?",
+      "slug": "will-pierre-gasly-be-the-2026-f1-drivers-champion",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Trump out as President before 2027?",
+      "slug": "trump-out-as-president-before-2027",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Carlos Sainz Jr. be the 2026 F1 Drivers' Champion?",
+      "slug": "will-carlos-sainz-jr-be-the-2026-f1-drivers-champion",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Gabriel Bortoleto be the 2026 F1 Drivers' Champion?",
+      "slug": "will-gabriel-bortoleto-be-the-2026-f1-drivers-champion",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Liam Lawson be the 2026 F1 Drivers' Champion?",
+      "slug": "will-liam-lawson-be-the-2026-f1-drivers-champion",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will the US acquire part of Greenland in 2026?",
+      "slug": "will-the-us-acquire-any-part-of-greenland-in-2026",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Eduardo Bolsonaro win the 2026 Brazilian presidential election?",
+      "slug": "will-eduardo-bolsonaro-win-the-2026-brazilian-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Вернётся ли трафик Ормузского пролива к норме до 31 декабря",
+      "slug": "strait-of-hormuz-traffic-returns-to-normal-by-december-31",
+      "stage": "B",
+      "fails": [
+        "источник — интерфейс на скриптах, а не машиночитаемые данные"
+      ],
+      "diag": {
+        "source_url": "https://portwatch.imf.org/pages/cb5856222a5b4105adc6ee7e880a1730",
+        "http": 200,
+        "content_type": "text/html; charset=utf-8",
+        "is_data": false,
+        "is_shell": true,
+        "terms_found": []
+      }
+    },
+    {
+      "q": "Will Carlos Roberto Massa Júnior win the 2026 Brazilian presidential election?",
+      "slug": "will-carlos-roberto-massa-jnior-win-the-2026-brazilian-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Michelle Bolsonaro win the 2026 Brazilian presidential election?",
+      "slug": "will-michelle-bolsonaro-win-the-2026-brazilian-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Luiz Inácio Lula da Silva win the 2026 Brazilian presidential election?",
+      "slug": "will-luiz-incio-lula-da-silva-win-the-2026-brazilian-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Flávio Bolsonaro win the 2026 Brazilian presidential election?",
+      "slug": "will-flvio-bolsonaro-win-the-2026-brazilian-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Esteban Ocon be the 2026 F1 Drivers' Champion?",
+      "slug": "will-esteban-ocon-be-the-2026-f1-drivers-champion",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Isack Hadjar be the 2026 F1 Drivers' Champion?",
+      "slug": "will-isack-hadjar-be-the-2026-f1-drivers-champion",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Pete Hegseth be the leader of Venezuela end of 2026?",
+      "slug": "will-pete-hegseth-be-the-leader-of-venezuela-end-of-2026",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Fernando Alonso be the 2026 F1 Drivers' Champion?",
+      "slug": "will-fernando-alonso-be-the-2026-f1-drivers-champion",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will United Russia (ER) gain the most seats in the next Russian parliamentary election?",
+      "slug": "will-united-russia-er-gain-the-most-seats-in-the-next-russian-parliamentary-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Fed rate hike in 2026?",
+      "slug": "fed-rate-hike-in-2026",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Nico Hülkenberg be the 2026 F1 Drivers' Champion?",
+      "slug": "will-nico-hlkenberg-be-the-2026-f1-drivers-champion",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Eduardo Leite win the 2026 Brazilian presidential election?",
+      "slug": "will-eduardo-leite-win-the-2026-brazilian-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Nebius Group be acquired before 2027?",
+      "slug": "will-nebius-group-be-acquired-before-2027-514-765",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Strait of Hormuz traffic returns to normal by September 30?",
+      "slug": "strait-of-hormuz-traffic-returns-to-normal-by-september-30-20260702154339440",
+      "stage": "B",
+      "fails": [
+        "источник — интерфейс на скриптах, а не машиночитаемые данные"
+      ],
+      "diag": {
+        "source_url": "https://portwatch.imf.org/pages/cb5856222a5b4105adc6ee7e880a1730",
+        "http": 200,
+        "content_type": "text/html; charset=utf-8",
+        "is_data": false,
+        "is_shell": true,
+        "terms_found": []
+      }
+    },
+    {
+      "q": "Will Fernando Haddad win the 2026 Brazilian presidential election?",
+      "slug": "will-fernando-haddad-win-the-2026-brazilian-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Ronaldo Caiado win the 2026 Brazilian presidential election?",
+      "slug": "will-ronaldo-caiado-win-the-2026-brazilian-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Lando Norris be the 2026 F1 Drivers' Champion?",
+      "slug": "will-lando-norris-be-the-2026-f1-drivers-champion",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Romeu Zema win the 2026 Brazilian presidential election?",
+      "slug": "will-romeu-zema-win-the-2026-brazilian-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Jair Bolsonaro win the 2026 Brazilian presidential election?",
+      "slug": "will-jair-bolsonaro-win-the-2026-brazilian-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will there be at least 10000 measles cases in the U.S. in 2026?",
+      "slug": "will-there-be-at-least-10000-measles-cases-in-the-us-in-2026-418-668-617-245-787",
+      "stage": "B",
+      "fails": [
+        "источник отвечает 403"
+      ],
+      "diag": {
+        "source_url": "https://www.cdc.gov/measles/data-research/index.html",
+        "http": 403
+      }
+    },
+    {
+      "q": "Will Mojtaba Khamenei be head of state in Iran end of 2026?",
+      "slug": "will-mojtaba-khamenei-be-head-of-state-in-iran-end-of-2026",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Mathilde Panot win the 2027 French presidential election?",
+      "slug": "will-mathilde-panot-win-the-2027-french-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Oscar Piastri be the 2026 F1 Drivers' Champion?",
+      "slug": "will-oscar-piastri-be-the-2026-f1-drivers-champion",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Max Verstappen be the 2026 F1 Drivers' Champion?",
+      "slug": "will-max-verstappen-be-the-2026-f1-drivers-champion",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Geraldo Alckmin win the 2026 Brazilian presidential election?",
+      "slug": "will-geraldo-alckmin-win-the-2026-brazilian-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will François Bayrou win the 2027 French presidential election?",
+      "slug": "will-franois-bayrou-win-the-2027-french-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Ségolène Royal win the 2027 French presidential election?",
+      "slug": "will-sgolne-royal-win-the-2027-french-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Xavier Bertrand win the 2027 French presidential election?",
+      "slug": "will-xavier-bertrand-win-the-2027-french-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will the Democratic Party control the House after the 2026 Midterm elections?",
+      "slug": "will-the-democratic-party-control-the-house-after-the-2026-midterm-elections",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will François Asselineau win the 2027 French presidential election?",
+      "slug": "will-franois-asselineau-win-the-2027-french-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Yaël Braun-Pivet win the 2027 French presidential election?",
+      "slug": "will-yal-braun-pivet-win-the-2027-french-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Evan Pettus be the leader of Venezuela end of 2026?",
+      "slug": "will-evan-pettus-be-the-leader-of-venezuela-end-of-2026",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Olivier Faure win the 2027 French presidential election?",
+      "slug": "will-olivier-faure-win-the-2027-french-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Élisabeth Borne win the 2027 French presidential election?",
+      "slug": "will-lisabeth-borne-win-the-2027-french-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Camilo Santana win the 2026 Brazilian presidential election?",
+      "slug": "will-camilo-santana-win-the-2026-brazilian-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Lewis Hamilton be the 2026 F1 Drivers' Champion?",
+      "slug": "will-lewis-hamilton-be-the-2026-f1-drivers-champion",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Charles Leclerc be the 2026 F1 Drivers' Champion?",
+      "slug": "will-charles-leclerc-be-the-2026-f1-drivers-champion",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Michel Barnier win the 2027 French presidential election?",
+      "slug": "will-michel-barnier-win-the-2027-french-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Mohammad Khatami be head of state in Iran end of 2026?",
+      "slug": "will-mohammad-khatami-be-head-of-state-in-iran-end-of-2026",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "US strike on Cuba by December 31?",
+      "slug": "us-strike-on-cuba-by-december-31",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Clémentine Autain win the 2027 French presidential election?",
+      "slug": "will-clmentine-autain-win-the-2027-french-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Aldo Rebelo win the 2026 Brazilian presidential election?",
+      "slug": "will-aldo-rebelo-win-the-2026-brazilian-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Manuel Bompard win the 2027 French presidential election?",
+      "slug": "will-manuel-bompard-win-the-2027-french-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Tom Steyer win the California Governor Election in 2026?",
+      "slug": "will-tom-steyer-win-the-california-governor-election-in-2026",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Carole Delga win the 2027 French presidential election?",
+      "slug": "will-carole-delga-win-the-2027-french-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Nicolas Dupont-Aignan win the 2027 French presidential election?",
+      "slug": "will-nicolas-dupont-aignan-win-the-2027-french-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will the US confirm that aliens exist by September 30?",
+      "slug": "will-the-us-confirm-that-aliens-exist-by-september-30-396",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Donald Trump win the Nobel Peace Prize in 2026?",
+      "slug": "will-donald-trump-win-the-nobel-peace-prize-in-2026-382",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Iran leadership change by December 31?",
+      "slug": "iran-leadership-change-by-december-31-974-976-658-482-568-685-996-469-827",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will the Republican Party control the House after the 2026 Midterm elections?",
+      "slug": "will-the-republican-party-control-the-house-after-the-2026-midterm-elections",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Fabien Roussel win the 2027 French presidential election?",
+      "slug": "will-fabien-roussel-win-the-2027-french-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Clémence Guetté win the 2027 French presidential election?",
+      "slug": "will-clmence-guett-win-the-2027-french-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Dan Caine be the leader of Venezuela end of 2026?",
+      "slug": "will-dan-caine-be-the-leader-of-venezuela-end-of-2026",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Kimi Antonelli be the 2026 F1 Drivers' Champion?",
+      "slug": "will-kimi-antonelli-be-the-2026-f1-drivers-champion",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Augusto Cury win the 2026 Brazilian presidential election?",
+      "slug": "will-augusto-cury-win-the-2026-brazilian-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Valérie Pécresse win the 2027 French presidential election?",
+      "slug": "will-valrie-pcresse-win-the-2027-french-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Tereza Cristina win the 2026 Brazilian presidential election?",
+      "slug": "will-tereza-cristina-win-the-2026-brazilian-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Williams be the 2026 F1 Constructors' Champion?",
+      "slug": "will-williams-be-the-2026-f1-constructors-champion",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Pablo Marçal win the 2026 Brazilian presidential election?",
+      "slug": "will-pablo-marcal-win-the-2026-brazilian-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Cadillac be the 2026 F1 Constructors' Champion?",
+      "slug": "will-cadillac-be-the-2026-f1-constructors-champion",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Seyed Hossein Mousavian be head of state in Iran end of 2026?",
+      "slug": "will-seyed-hossein-mousavian-be-head-of-state-in-iran-end-of-2026",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Billionaire one-time wealth tax passes in California election 2026?",
+      "slug": "billionaire-one-time-wealth-tax-passes-in-california-election-2026",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Marine Tondelier win the 2027 French presidential election?",
+      "slug": "will-marine-tondelier-win-the-2027-french-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Laurent Wauquiez win the 2027 French presidential election?",
+      "slug": "will-laurent-wauquiez-win-the-2027-french-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will the Liberal Democratic Party of Russia (LDPR) gain the most seats in the next Russian parliamentary election?",
+      "slug": "will-the-liberal-democratic-party-of-russia-ldpr-gain-the-most-seats-in-the-next-russian-parliamentary-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Benjamin Netanyahu be the next Prime Minister of Israel?",
+      "slug": "will-benjamin-netanyahu-be-the-next-prime-minister-of-israel",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Mostafa Pourmohammadi be head of state in Iran end of 2026?",
+      "slug": "will-mostafa-pourmohammadi-be-head-of-state-in-iran-end-of-2026",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Alpine be the 2026 F1 Constructors' Champion?",
+      "slug": "will-alpine-be-the-2026-f1-constructors-champion",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Haas be the 2026 F1 Constructors' Champion?",
+      "slug": "will-haas-be-the-2026-f1-constructors-champion",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "China x Taiwan military clash before 2027?",
+      "slug": "china-x-taiwan-military-clash-before-2027",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Aston Martin be the 2026 F1 Constructors' Champion?",
+      "slug": "will-aston-martin-be-the-2026-f1-constructors-champion",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will the U.S. invade Cuba in 2026?",
+      "slug": "will-the-us-invade-cuba-in-2026",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Audi be the 2026 F1 Constructors' Champion?",
+      "slug": "will-audi-be-the-2026-f1-constructors-champion",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Racing Bulls be the 2026 F1 Constructors' Champion?",
+      "slug": "will-racing-bulls-be-the-2026-f1-constructors-champion",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will François Ruffin win the 2027 French presidential election?",
+      "slug": "will-franois-ruffin-win-the-2027-french-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Hassan Shariatmadari be head of state in Iran end of 2026?",
+      "slug": "will-hassan-shariatmadari-be-head-of-state-in-iran-end-of-2026",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Zelenskyy out as Ukraine president by end of 2026?",
+      "slug": "zelenskyy-out-as-ukraine-president-before-2027",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Columbus Crew win the 2026 MLS Cup?",
+      "slug": "will-columbus-crew-win-the-2026-mls-cup",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Naftali Bennett be the next Prime Minister of Israel?",
+      "slug": "will-naftali-bennett-be-the-next-prime-minister-of-israel",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Dinorah Figuera be the leader of Venezuela end of 2026?",
+      "slug": "will-dinorah-figuera-be-the-leader-of-venezuela-end-of-2026",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Real Salt Lake win the 2026 MLS Cup?",
+      "slug": "will-real-salt-lake-win-the-2026-mls-cup",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will GameStop acquire eBay?",
+      "slug": "will-gamestop-acquire-ebay",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Rodina gain the most seats in the next Russian parliamentary election?",
+      "slug": "will-rodina-gain-the-most-seats-in-the-next-russian-parliamentary-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "2026 Balance of Power: D Senate, D House",
+      "slug": "2026-balance-of-power-d-senate-d-house-949",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Nicolás Maduro be the leader of Venezuela end of 2026?",
+      "slug": "will-nicols-maduro-be-the-leader-of-venezuela-end-of-2026",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Jeffrey Epstein foul play confirmed by December 31, 2026?",
+      "slug": "jeffrey-epstein-foul-play-confirmed-by-december-31-2026",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "2026 Balance of Power: R Senate, R House",
+      "slug": "2026-balance-of-power-r-senate-r-house-537",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Ukraine recapture Crimean territory by December 31, 2026?",
+      "slug": "will-ukraine-recapture-crimean-territory-by-december-31-2026",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Steve Hilton win the California Governor Election in 2026?",
+      "slug": "will-steve-hilton-win-the-california-governor-election-in-2026",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "US announces end of Iranian blockade by September 30, 2026?",
+      "slug": "us-announces-end-of-iranian-blockade-by-september-30-2026-20260727171615364-722-649-646-561-213-644-414-831",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will George Russell be the 2026 F1 Drivers' Champion?",
+      "slug": "will-george-russell-be-the-2026-f1-drivers-champion",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Ukraine signs peace deal with Russia before 2027?",
+      "slug": "ukraine-signs-peace-deal-with-russia-before-2027",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will New People (NL) gain the most seats in the next Russian parliamentary election?",
+      "slug": "will-new-people-nl-gain-the-most-seats-in-the-next-russian-parliamentary-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will the Chicago White Sox win the 2026 World Series?",
+      "slug": "will-the-chicago-white-sox-win-the-2026-world-series",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of"
+      ]
+    },
+    {
+      "q": "Will the Washington Nationals win the 2026 World Series?",
+      "slug": "will-the-washington-nationals-win-the-2026-world-series",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of"
+      ]
+    },
+    {
+      "q": "Jeffrey Epstein confirmed to be alive before 2027?",
+      "slug": "is-jeffrey-epstein-alive-498",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Avigdor Lieberman be the next Prime Minister of Israel?",
+      "slug": "will-avigdor-lieberman-be-the-next-prime-minister-of-israel",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Russia x Ukraine ceasefire agreement by December 31, 2026?",
+      "slug": "russia-x-ukraine-ceasefire-agreement-by-december-31-2026",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Bab el-Mandeb Strait effectively closed by August 31?",
+      "slug": "bab-el-mandeb-strait-effectively-closed-by-august-31",
+      "stage": "B",
+      "fails": [
+        "источник — интерфейс на скриптах, а не машиночитаемые данные"
+      ],
+      "diag": {
+        "source_url": "https://portwatch.imf.org/pages/6b1814d64903461b98144a6cc25eb79c",
+        "http": 200,
+        "content_type": "text/html; charset=utf-8",
+        "is_data": false,
+        "is_shell": true,
+        "terms_found": []
+      }
+    },
+    {
+      "q": "Will Amir Ohana be the next Prime Minister of Israel?",
+      "slug": "will-amir-ohana-be-the-next-prime-minister-of-israel",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Bab el-Mandeb Strait effectively closed by September 30?",
+      "slug": "bab-el-mandeb-strait-effectively-closed-by-september-30-999-671-939",
+      "stage": "B",
+      "fails": [
+        "источник — интерфейс на скриптах, а не машиночитаемые данные"
+      ],
+      "diag": {
+        "source_url": "https://portwatch.imf.org/pages/6b1814d64903461b98144a6cc25eb79c",
+        "http": 200,
+        "content_type": "text/html; charset=utf-8",
+        "is_data": false,
+        "is_shell": true,
+        "terms_found": []
+      }
+    },
+    {
+      "q": "Will the Democratic Party control the Senate after the 2026 Midterm elections?",
+      "slug": "will-the-democratic-party-control-the-senate-after-the-2026-midterm-elections",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "US-Iran Final Nuclear Deal by December 31, 2026?",
+      "slug": "us-iran-final-nuclear-deal-by-december-31-2026-191",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will AfD win the most seats in the 2026 Berlin state elections?",
+      "slug": "will-afd-win-the-most-seats-in-the-2026-berlin-state-elections",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Perplexity AI be acquired before 2027?",
+      "slug": "will-perplexity-ai-be-acquired-before-2027-776-526",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Helder Barbalho win the 2026 Brazilian presidential election?",
+      "slug": "will-helder-barbalho-win-the-2026-brazilian-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "AI bubble burst in 2026?",
+      "slug": "ai-industry-downturn-by-december-31-2026-857",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Orlando City SC win the 2026 MLS Cup?",
+      "slug": "will-orlando-city-sc-win-the-2026-mls-cup",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Yair Golan be the next Prime Minister of Israel?",
+      "slug": "will-yair-golan-be-the-next-prime-minister-of-israel",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Alireza Arafi be head of state in Iran end of 2026?",
+      "slug": "will-alireza-arafi-be-head-of-state-in-iran-end-of-2026",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Yossi Cohen be the next Prime Minister of Israel?",
+      "slug": "will-yossi-cohen-be-the-next-prime-minister-of-israel",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Netanyahu out by end of 2026?",
+      "slug": "netanyahu-out-before-2027-684-719-226-657",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Opensea FDV above $500M one day after launch?",
+      "slug": "opensea-fdv-above-500m-one-day-after-launch-221-468-166-873-514-375-468-384",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Bernard Cazeneuve win the 2027 French presidential election?",
+      "slug": "will-bernard-cazeneuve-win-the-2027-french-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will the St. Louis Cardinals win the 2026 World Series?",
+      "slug": "will-the-st-louis-cardinals-win-the-2026-world-series",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of"
+      ]
+    },
+    {
+      "q": "Will the Boston Red Sox win the 2026 World Series?",
+      "slug": "will-the-boston-red-sox-win-the-2026-world-series",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Reza Pahlavi enter Iran by December 31?",
+      "slug": "will-reza-pahlavi-enter-iran-by-december-31-898-927",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Iran agrees to surrender enriched uranium stockpile by December 31, 2026?",
+      "slug": "iran-agrees-to-surrender-enriched-uranium-stockpile-by-december-31-2026-752-299",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "US obtains Iranian enriched uranium by December 31?",
+      "slug": "us-obtains-iranian-enriched-uranium-by-december-31-725-733-123-574-634",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Juan Branco win the 2027 French presidential election?",
+      "slug": "will-juan-branco-win-the-2027-french-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Alberta join the US? ",
+      "slug": "will-alberta-join-the-us",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Gideon Sa’ar be the next Prime Minister of Israel?",
+      "slug": "will-gideon-saar-be-the-next-prime-minister-of-israel",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Benny Gantz be the next Prime Minister of Israel?",
+      "slug": "will-benny-gantz-be-the-next-prime-minister-of-israel",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Gabriel Attal win the 2027 French presidential election?",
+      "slug": "will-gabriel-attal-win-the-2027-french-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Marine Le Pen win the 2027 French presidential election?",
+      "slug": "will-marine-le-pen-win-the-2027-french-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Éric Zemmour win the 2027 French presidential election?",
+      "slug": "will-ric-zemmour-win-the-2027-french-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will A Just Russia – For Truth (SRZP) gain the most seats in the next Russian parliamentary election?",
+      "slug": "will-a-just-russia-for-truth-srzp-gain-the-most-seats-in-the-next-russian-parliamentary-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Bruno Retailleau win the 2027 French presidential election?",
+      "slug": "will-bruno-retailleau-win-the-2027-french-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Opensea FDV above $1B one day after launch?",
+      "slug": "opensea-fdv-above-1b-one-day-after-launch-426-422-754-756-879-328-494",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Diosdado Cabello Rondón be the leader of Venezuela end of 2026?",
+      "slug": "will-diosdado-cabello-rondn-be-the-leader-of-venezuela-end-of-2026",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will China invade Taiwan by September 30, 2026?",
+      "slug": "will-china-invade-taiwan-by-september-30-2026",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Hezbollah disarm by December 31?",
+      "slug": "will-hezbollah-disarm-by-december-31-632-848",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Gérald Darmanin win the 2027 French presidential election?",
+      "slug": "will-grald-darmanin-win-the-2027-french-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will the Miami Marlins win the 2026 World Series?",
+      "slug": "will-the-miami-marlins-win-the-2026-world-series",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of"
+      ]
+    },
+    {
+      "q": "Will UNRWA win the Nobel Peace Prize in 2026?",
+      "slug": "will-unrwa-win-the-nobel-peace-prize-in-2026-983",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "2026 Balance of Power: R Senate, D House",
+      "slug": "2026-balance-of-power-r-senate-d-house-444",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Charlotte FC win the 2026 MLS Cup?",
+      "slug": "will-charlotte-fc-win-the-2026-mls-cup",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Jordan Bardella win the 2027 French presidential election?",
+      "slug": "will-jordan-bardella-win-the-2027-french-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Alex Padilla win the California Governor Election in 2026?",
+      "slug": "will-alex-padilla-win-the-california-governor-election-in-2026",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Richard Van De Water win The Bachelorette Season 22?",
+      "slug": "will-richard-van-de-water-win-the-bachelorette-season-22",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Human moon landing in 2026?",
+      "slug": "human-moon-landing-in-2026",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will the Iranian regime fall by September 30?",
+      "slug": "will-the-iranian-regime-fall-by-september-30-20260629143335077",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Sarah Knafo win the 2027 French presidential election?",
+      "slug": "will-sarah-knafo-win-the-2027-french-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Chad Bianco win the California Governor Election in 2026?",
+      "slug": "will-chad-bianco-win-the-california-governor-election-in-2026",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will the Baltimore Orioles win the 2026 World Series?",
+      "slug": "will-the-baltimore-orioles-win-the-2026-world-series",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Xavier Becerra win the California Governor Election in 2026?",
+      "slug": "will-xavier-becerra-win-the-california-governor-election-in-2026",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Moshe Feiglin be the next Prime Minister of Israel?",
+      "slug": "will-moshe-feiglin-be-the-next-prime-minister-of-israel",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Kyle Langford win the California Governor Election in 2026?",
+      "slug": "will-kyle-langford-win-the-california-governor-election-in-2026",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Carlos Alcaraz win the 2026 Men's US Open?",
+      "slug": "will-carlos-alcaraz-win-the-2026-mens-us-open",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of"
+      ]
+    },
+    {
+      "q": "2026 Balance of Power: Other",
+      "slug": "2026-balance-of-power-other-131",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will McLaren be the 2026 F1 Constructors' Champion?",
+      "slug": "will-mclaren-be-the-2026-f1-constructors-champion",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "NATO x Russia military clash by December 31, 2026?",
+      "slug": "nato-x-russia-military-clash-by-december-31-2026-244-538-582",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Rick Caruso win the California Governor Election in 2026?",
+      "slug": "will-rick-caruso-win-the-california-governor-election-in-2026",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will David Lisnard win the 2027 French presidential election?",
+      "slug": "will-david-lisnard-win-the-2027-french-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Delcy Rodríguez be the leader of Venezuela end of 2026?",
+      "slug": "will-delcy-rodrguez-be-the-leader-of-venezuela-end-of-2026",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Nicole Shanahan win the California Governor Election in 2026?",
+      "slug": "will-nicole-shanahan-win-the-california-governor-election-in-2026",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Katie Porter win the California Governor Election in 2026?",
+      "slug": "will-katie-porter-win-the-california-governor-election-in-2026",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Gadi Eizenkot be the next Prime Minister of Israel?",
+      "slug": "will-gadi-eizenkot-be-the-next-prime-minister-of-israel",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will the Los Angeles Angels win the 2026 World Series?",
+      "slug": "will-the-los-angeles-angels-win-the-2026-world-series",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Betty Yee win the California Governor Election in 2026?",
+      "slug": "will-betty-yee-win-the-california-governor-election-in-2026",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Yariv Levin be the next Prime Minister of Israel?",
+      "slug": "will-yariv-levin-be-the-next-prime-minister-of-israel",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Ayelet Shaked be the next Prime Minister of Israel?",
+      "slug": "will-ayelet-shaked-be-the-next-prime-minister-of-israel",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Dominique de Villepin win the 2027 French presidential election?",
+      "slug": "will-dominique-de-villepin-win-the-2027-french-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will the Communist Party of the Russian Federation (KPRF) gain the most seats in the next Russian parliamentary election?",
+      "slug": "will-the-communist-party-of-the-russian-federation-kprf-gain-the-most-seats-in-the-next-russian-parliamentary-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Viking Therapeutics be acquired before 2027?",
+      "slug": "will-viking-therapeutics-be-acquired-before-2027-542-549",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will the Republican Party control the Senate after the 2026 Midterm elections?",
+      "slug": "will-the-republican-party-control-the-senate-after-the-2026-midterm-elections",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": " Iran agrees to end enrichment of uranium by December 31?",
+      "slug": "iran-agrees-to-end-enrichment-of-uranium-by-december-31-1",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will the Houston Astros win the 2026 World Series?",
+      "slug": "will-the-houston-astros-win-the-2026-world-series",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of"
+      ]
+    },
+    {
+      "q": "Cuban regime falls in 2026?",
+      "slug": "cuban-regime-falls-in-2026",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, widely reported, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Yabloko gain the most seats in the next Russian parliamentary election?",
+      "slug": "will-yabloko-gain-the-most-seats-in-the-next-russian-parliamentary-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will the Cincinnati Reds win the 2026 World Series?",
+      "slug": "will-the-cincinnati-reds-win-the-2026-world-series",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Raphaël Glucksmann win the 2027 French presidential election?",
+      "slug": "will-raphal-glucksmann-win-the-2027-french-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will the San Francisco Giants win the 2026 World Series?",
+      "slug": "will-the-san-francisco-giants-win-the-2026-world-series",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Hamas agree to disarm by December 31?",
+      "slug": "will-hamas-agree-to-disarm-by-december-31",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "2026 Balance of Power: D Senate, R House",
+      "slug": "2026-balance-of-power-d-senate-r-house-692",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will François Hollande win the 2027 French presidential election?",
+      "slug": "will-franois-hollande-win-the-2027-french-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Antonio Villaraigosa win the California Governor Election in 2026?",
+      "slug": "will-antonio-villaraigosa-win-the-california-governor-election-in-2026",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "US announces end of Iranian blockade by September 7, 2026?",
+      "slug": "us-announces-end-of-iranian-blockade-by-september-7-2026",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will FC Cincinnati win the 2026 MLS Cup?",
+      "slug": "will-fc-cincinnati-win-the-2026-mls-cup",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Mitch McConnell steps down from Senate before his term ends?",
+      "slug": "will-mitch-mcconnell-resign-from-the-senate-before-his-term-ends",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Stephen Cloobeck win the California Governor Election in 2026?",
+      "slug": "will-stephen-cloobeck-win-the-california-governor-election-in-2026",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Kamala Harris win the California Governor Election in 2026?",
+      "slug": "will-kamala-harris-win-the-california-governor-election-in-2026",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Sébastien Lecornu win the 2027 French presidential election?",
+      "slug": "will-sbastien-lecornu-win-the-2027-french-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Toni Atkins win the California Governor Election in 2026?",
+      "slug": "will-toni-atkins-win-the-california-governor-election-in-2026",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Yoaz Hendel be the next Prime Minister of Israel?",
+      "slug": "will-yoaz-hendel-be-the-next-prime-minister-of-israel",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Itamar Ben Gvir be the next Prime Minister of Israel?",
+      "slug": "will-itamar-ben-gvir-be-the-next-prime-minister-of-israel",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Michael Younger win the California Governor Election in 2026?",
+      "slug": "will-michael-younger-win-the-california-governor-election-in-2026",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Nir Barkat be the next Prime Minister of Israel?",
+      "slug": "will-nir-barkat-be-the-next-prime-minister-of-israel",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Jimmie Åkesson be the next Prime Minister of Sweden?",
+      "slug": "will-jimmie-kesson-be-the-next-prime-minister-of-sweden",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Russia x Ukraine ceasefire agreement by October 31, 2026?",
+      "slug": "russia-x-ukraine-ceasefire-agreement-by-october-31-2026",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "US-Iran Final Nuclear Deal by September 30, 2026?",
+      "slug": "us-iran-final-nuclear-deal-by-september-30-2026",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will the Milwaukee Brewers win the 2026 World Series?",
+      "slug": "will-the-milwaukee-brewers-win-the-2026-world-series",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of"
+      ]
+    },
+    {
+      "q": "Will there be no head of state of Venezuela end of 2026?",
+      "slug": "will-there-be-no-head-of-state-of-venezuela-end-of-2026",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Nithya Raman win the 2026 Los Angeles mayoral election?",
+      "slug": "will-nithya-raman-win-the-2026-los-angeles-mayoral-election-876",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Jean Castex win the 2027 French presidential election?",
+      "slug": "will-jean-castex-win-the-2027-french-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Yair Lapid be the next Prime Minister of Israel?",
+      "slug": "will-yair-lapid-be-the-next-prime-minister-of-israel",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Eric Swalwell win the California Governor Election in 2026?",
+      "slug": "will-eric-swalwell-win-the-california-governor-election-in-2026",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Strait of Hormuz traffic returns to normal by September 15?",
+      "slug": "strait-of-hormuz-traffic-returns-to-normal-by-september-15-20260810150912478",
+      "stage": "B",
+      "fails": [
+        "источник — интерфейс на скриптах, а не машиночитаемые данные"
+      ],
+      "diag": {
+        "source_url": "https://portwatch.imf.org/pages/cb5856222a5b4105adc6ee7e880a1730",
+        "http": 200,
+        "content_type": "text/html; charset=utf-8",
+        "is_data": false,
+        "is_shell": true,
+        "terms_found": []
+      }
+    },
+    {
+      "q": "Will Greta Thunberg win the Nobel Peace Prize in 2026?",
+      "slug": "will-greta-thunberg-win-the-nobel-peace-prize-in-2026-767",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Crude Oil reach a new all-time high by September 30?",
+      "slug": "will-crude-oil-reach-a-new-all-time-high-by-september-30",
+      "stage": "B",
+      "fails": [
+        "источник отвечает 403"
+      ],
+      "diag": {
+        "source_url": "https://www.cmegroup.com/markets/energy/crude-oil/light-sweet-crude.quotes.html",
+        "http": 403
+      }
+    },
+    {
+      "q": "Will Édouard Philippe win the 2027 French presidential election?",
+      "slug": "will-douard-philippe-win-the-2027-french-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will María Corina Machado be the leader of Venezuela end of 2026?",
+      "slug": "will-mara-corina-machado-be-the-leader-of-venezuela-end-of-2026",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Xi Jinping win the Nobel Peace Prize in 2026?",
+      "slug": "will-xi-jinping-win-the-nobel-peace-prize-in-2026",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Hassan Khomeini be head of state in Iran end of 2026?",
+      "slug": "will-hassan-khomeini-be-head-of-state-in-iran-end-of-2026",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will the U.S. invade Greenland in 2026?",
+      "slug": "will-the-us-invade-greenland-in-2026",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Extended FDV above $300M one day after launch?",
+      "slug": "extended-fdv-above-300m-one-day-after-launch-351-333",
+      "stage": "B",
+      "fails": [
+        "источник отвечает 403"
+      ],
+      "diag": {
+        "source_url": "https://x.com/extendedapp",
+        "http": 403
+      }
+    },
+    {
+      "q": "Will Eleni Kounalakis win the California Governor Election in 2026?",
+      "slug": "will-eleni-kounalakis-win-the-california-governor-election-in-2026",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Tony Thurmond win the California Governor Election in 2026?",
+      "slug": "will-tony-thurmond-win-the-california-governor-election-in-2026",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will the San Diego Padres win the 2026 World Series?",
+      "slug": "will-the-san-diego-padres-win-the-2026-world-series",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Marco Rubio be the leader of Venezuela end of 2026?",
+      "slug": "will-marco-rubio-be-the-leader-of-venezuela-end-of-2026",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will the Detroit Tigers win the 2026 World Series?",
+      "slug": "will-the-detroit-tigers-win-the-2026-world-series",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Daniel Mercuri win the California Governor Election in 2026?",
+      "slug": "will-daniel-mercuri-win-the-california-governor-election-in-2026",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Metamask FDV above $700M one day after launch?",
+      "slug": "metamask-fdv-above-700m-one-day-after-launch-696-977-652-246-632",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will the Philadelphia Phillies win the 2026 World Series?",
+      "slug": "will-the-philadelphia-phillies-win-the-2026-world-series",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Matt Mahan win the California Governor Election in 2026?",
+      "slug": "will-matt-mahan-win-the-california-governor-election-in-2026",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "US announces end of Iranian blockade by December 31, 2026?",
+      "slug": "us-announces-end-of-iranian-blockade-by-december-31-2026-20260727171803489-375-949-645-919-269-157-255-857",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will the Chicago Cubs win the 2026 World Series?",
+      "slug": "will-the-chicago-cubs-win-the-2026-world-series",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of"
+      ]
+    },
+    {
+      "q": "China x Japan military clash before 2027?",
+      "slug": "china-x-japan-military-clash-before-2027",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Jean-Luc Mélenchon win the 2027 French presidential election?",
+      "slug": "will-jean-luc-mlenchon-win-the-2027-french-presidential-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Russia capture all of Stepnohirsk by September 30, 2026?",
+      "slug": "will-russia-capture-all-of-stepnohirsk-by-september-30-2026",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Butch Ware win the California Governor Election in 2026?",
+      "slug": "will-butch-ware-win-the-california-governor-election-in-2026",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Civic Platform (GP) gain the most seats in the next Russian parliamentary election?",
+      "slug": "will-civic-platform-gp-gain-the-most-seats-in-the-next-russian-parliamentary-election",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will US withdraw from NATO before 2027?",
+      "slug": "will-us-withdraw-from-nato-before-2027-348-975-598-224-737",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of",
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will the Kansas City Royals win the 2026 World Series?",
+      "slug": "will-the-kansas-city-royals-win-the-2026-world-series",
+      "stage": "A",
+      "fails": [
+        "оговорка-лазейка: consensus of credible reporting, credible reporting, may also be used, a consensus of"
+      ]
+    },
+    {
+      "q": "Will Ahmed al-Sharaa win the Nobel Peace Prize in 2026?",
+      "slug": "will-ahmed-al-sharaa-win-the-nobel-peace-prize-in-2026",
+      "stage": "A",
+      "fails": [
+        "в правилах нет ссылки на источник"
+      ]
+    },
+    {
+      "q": "Will Wicked: For Good be the top grossing movie of 2026?",
+      "slug": "will-wicked-for-good-be-the-top-grossing-movie-of-2026",
+      "stage": "C",
+      "fails": [
+        "не попал в лимит стадии C: слишком много внимания к рынку"
+      ],
+      "diag": {
+        "source_url": "https://www.boxofficemojo.com/year/2026/?grossesOption=calendarGrosses",
+        "http": 200,
+        "content_type": "text/html;charset=utf-8",
+        "is_data": false,
+        "is_shell": false,
+        "terms_found": [
+          "Gross"
+        ]
+      }
+    },
+    {
+      "q": "Will Lionel Messi win the 2026 Ballon d'Or?",
+      "slug": "will-lionel-messi-win-the-2026-ballon-dor",
+      "stage": "C",
+      "fails": [
+        "не попал в лимит стадии C: слишком много внимания к рынку"
+      ],
+      "diag": {
+        "source_url": "https://www.francefootball.fr/",
+        "http": 200,
+        "content_type": "text/html; charset=utf-8",
+        "is_data": false,
+        "is_shell": false,
+        "terms_found": []
+      }
+    },
+    {
+      "q": "Will Wuthering Heights be the top grossing movie of 2026?",
+      "slug": "will-wuthering-heights-be-the-top-grossing-movie-of-2026",
+      "stage": "C",
+      "fails": [
+        "не попал в лимит стадии C: слишком много внимания к рынку"
+      ],
+      "diag": {
+        "source_url": "https://www.boxofficemojo.com/year/2026/?grossesOption=calendarGrosses",
+        "http": 200,
+        "content_type": "text/html;charset=utf-8",
+        "is_data": false,
+        "is_shell": false,
+        "terms_found": [
+          "Gross"
+        ]
+      }
+    },
+    {
+      "q": "Will Scream 7 be the top grossing movie of 2026?",
+      "slug": "will-scream-7-be-the-top-grossing-movie-of-2026",
+      "stage": "C",
+      "fails": [
+        "не попал в лимит стадии C: слишком много внимания к рынку"
+      ],
+      "diag": {
+        "source_url": "https://www.boxofficemojo.com/year/2026/?grossesOption=calendarGrosses",
+        "http": 200,
+        "content_type": "text/html;charset=utf-8",
+        "is_data": false,
+        "is_shell": false,
+        "terms_found": [
+          "Gross"
+        ]
+      }
+    },
+    {
+      "q": "Will 4 Fed rate cuts happen in 2026?",
+      "slug": "will-4-fed-rate-cuts-happen-in-2026",
+      "stage": "C",
+      "fails": [
+        "не попал в лимит стадии C: слишком много внимания к рынку"
+      ],
+      "diag": {
+        "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+        "http": 200,
+        "content_type": "text/html",
+        "is_data": false,
+        "is_shell": false,
+        "terms_found": []
+      }
+    },
+    {
+      "q": "Will 3 Fed rate cuts happen in 2026?",
+      "slug": "will-3-fed-rate-cuts-happen-in-2026",
+      "stage": "C",
+      "fails": [
+        "не попал в лимит стадии C: слишком много внимания к рынку"
+      ],
+      "diag": {
+        "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+        "http": 200,
+        "content_type": "text/html",
+        "is_data": false,
+        "is_shell": false,
+        "terms_found": []
+      }
+    },
+    {
+      "q": "Will 1 Fed rate cut happen in 2026?",
+      "slug": "will-1-fed-rate-cut-happen-in-2026",
+      "stage": "C",
+      "fails": [
+        "не попал в лимит стадии C: слишком много внимания к рынку"
+      ],
+      "diag": {
+        "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+        "http": 200,
+        "content_type": "text/html",
+        "is_data": false,
+        "is_shell": false,
+        "terms_found": []
+      }
+    },
+    {
+      "q": "Will 5 Fed rate cuts happen in 2026?",
+      "slug": "will-5-fed-rate-cuts-happen-in-2026",
+      "stage": "C",
+      "fails": [
+        "не попал в лимит стадии C: слишком много внимания к рынку"
+      ],
+      "diag": {
+        "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+        "http": 200,
+        "content_type": "text/html",
+        "is_data": false,
+        "is_shell": false,
+        "terms_found": []
+      }
+    },
+    {
+      "q": "Will 2 Fed rate cuts happen in 2026?",
+      "slug": "will-2-fed-rate-cuts-happen-in-2026",
+      "stage": "C",
+      "fails": [
+        "не попал в лимит стадии C: слишком много внимания к рынку"
+      ],
+      "diag": {
+        "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+        "http": 200,
+        "content_type": "text/html",
+        "is_data": false,
+        "is_shell": false,
+        "terms_found": []
+      }
+    },
+    {
+      "q": "Will 8 Fed rate cuts happen in 2026?",
+      "slug": "will-8-fed-rate-cuts-happen-in-2026",
+      "stage": "C",
+      "fails": [
+        "не попал в лимит стадии C: слишком много внимания к рынку"
+      ],
+      "diag": {
+        "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+        "http": 200,
+        "content_type": "text/html",
+        "is_data": false,
+        "is_shell": false,
+        "terms_found": []
+      }
+    },
+    {
+      "q": "Will 7 Fed rate cuts happen in 2026?",
+      "slug": "will-7-fed-rate-cuts-happen-in-2026",
+      "stage": "C",
+      "fails": [
+        "не попал в лимит стадии C: слишком много внимания к рынку"
+      ],
+      "diag": {
+        "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+        "http": 200,
+        "content_type": "text/html",
+        "is_data": false,
+        "is_shell": false,
+        "terms_found": []
+      }
+    },
+    {
+      "q": "Will the upper bound of the target federal funds rate be ≥ 4.5% at the end of 2026?",
+      "slug": "will-the-upper-bound-of-the-target-federal-funds-rate-be-4pt5-at-the-end-of-2026-139",
+      "stage": "C",
+      "fails": [
+        "не попал в лимит стадии C: слишком много внимания к рынку"
+      ],
+      "diag": {
+        "source_url": "https://www.federalreserve.gov/monetarypolicy/openmarket.htm",
+        "http": 200,
+        "content_type": "text/html",
+        "is_data": false,
+        "is_shell": false,
+        "terms_found": []
+      }
+    },
+    {
+      "q": "Will 12 or more Fed rate cuts happen in 2026?",
+      "slug": "will-12-or-more-fed-rate-cuts-happen-in-2026",
+      "stage": "C",
+      "fails": [
+        "не попал в лимит стадии C: слишком много внимания к рынку"
+      ],
+      "diag": {
+        "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+        "http": 200,
+        "content_type": "text/html",
+        "is_data": false,
+        "is_shell": false,
+        "terms_found": []
+      }
+    },
+    {
+      "q": "Will Harry Kane win the 2026 Ballon d'Or?",
+      "slug": "will-harry-kane-win-the-2026-ballon-dor",
+      "stage": "C",
+      "fails": [
+        "не попал в лимит стадии C: слишком много внимания к рынку"
+      ],
+      "diag": {
+        "source_url": "https://www.francefootball.fr/",
+        "http": 200,
+        "content_type": "text/html; charset=utf-8",
+        "is_data": false,
+        "is_shell": false,
+        "terms_found": []
+      }
+    },
+    {
+      "q": "Will 6 Fed rate cuts happen in 2026?",
+      "slug": "will-6-fed-rate-cuts-happen-in-2026",
+      "stage": "C",
+      "fails": [
+        "не попал в лимит стадии C: слишком много внимания к рынку"
+      ],
+      "diag": {
+        "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+        "http": 200,
+        "content_type": "text/html",
+        "is_data": false,
+        "is_shell": false,
+        "terms_found": []
+      }
+    },
+    {
+      "q": "Will 9 Fed rate cuts happen in 2026?",
+      "slug": "will-9-fed-rate-cuts-happen-in-2026",
+      "stage": "C",
+      "fails": [
+        "не попал в лимит стадии C: слишком много внимания к рынку"
+      ],
+      "diag": {
+        "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+        "http": 200,
+        "content_type": "text/html",
+        "is_data": false,
+        "is_shell": false,
+        "terms_found": []
+      }
+    },
+    {
+      "q": "Will 10 Fed rate cuts happen in 2026?",
+      "slug": "will-10-fed-rate-cuts-happen-in-2026",
+      "stage": "C",
+      "fails": [
+        "не попал в лимит стадии C: слишком много внимания к рынку"
+      ],
+      "diag": {
+        "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+        "http": 200,
+        "content_type": "text/html",
+        "is_data": false,
+        "is_shell": false,
+        "terms_found": []
+      }
+    },
+    {
+      "q": "Will 11 Fed rate cuts happen in 2026?",
+      "slug": "will-11-fed-rate-cuts-happen-in-2026",
+      "stage": "C",
+      "fails": [
+        "не попал в лимит стадии C: слишком много внимания к рынку"
+      ],
+      "diag": {
+        "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+        "http": 200,
+        "content_type": "text/html",
+        "is_data": false,
+        "is_shell": false,
+        "terms_found": []
+      }
+    },
+    {
+      "q": "Will the upper bound of the target federal funds rate be 4.0% at the end of 2026?",
+      "slug": "will-the-upper-bound-of-the-target-federal-funds-rate-be-4pt0-at-the-end-of-2026-386",
+      "stage": "C",
+      "fails": [
+        "не попал в лимит стадии C: слишком много внимания к рынку"
+      ],
+      "diag": {
+        "source_url": "https://www.federalreserve.gov/monetarypolicy/openmarket.htm",
+        "http": 200,
+        "content_type": "text/html",
+        "is_data": false,
+        "is_shell": false,
+        "terms_found": []
+      }
+    },
+    {
+      "q": "Will no Fed rate cuts happen in 2026?",
+      "slug": "will-no-fed-rate-cuts-happen-in-2026",
+      "stage": "C",
+      "fails": [
+        "не попал в лимит стадии C: слишком много внимания к рынку"
+      ],
+      "diag": {
+        "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+        "http": 200,
+        "content_type": "text/html",
+        "is_data": false,
+        "is_shell": false,
+        "terms_found": []
+      }
+    },
+    {
+      "q": "Will the Fed decrease interest rates by 50+ bps after the September 2026 meeting?",
+      "slug": "will-the-fed-decrease-interest-rates-by-50-bps-after-the-september-2026-meeting-863",
+      "stage": "C",
+      "fails": [
+        "не попал в лимит стадии C: слишком много внимания к рынку"
+      ],
+      "diag": {
+        "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+        "http": 200,
+        "content_type": "text/html",
+        "is_data": false,
+        "is_shell": false,
+        "terms_found": []
+      }
+    },
+    {
+      "q": "Will the Fed increase interest rates by 50+ bps after the September 2026 meeting?",
+      "slug": "will-the-fed-increase-interest-rates-by-50-bps-after-the-september-2026-meeting-664",
+      "stage": "C",
+      "fails": [
+        "не попал в лимит стадии C: слишком много внимания к рынку"
+      ],
+      "diag": {
+        "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+        "http": 200,
+        "content_type": "text/html",
+        "is_data": false,
+        "is_shell": false,
+        "terms_found": []
+      }
+    },
+    {
+      "q": "Will the Fed increase interest rates by 25 bps after the September 2026 meeting?",
+      "slug": "will-the-fed-increase-interest-rates-by-25-bps-after-the-september-2026-meeting-649",
+      "stage": "C",
+      "fails": [
+        "не попал в лимит стадии C: слишком много внимания к рынку"
+      ],
+      "diag": {
+        "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+        "http": 200,
+        "content_type": "text/html",
+        "is_data": false,
+        "is_shell": false,
+        "terms_found": []
+      }
+    },
+    {
+      "q": "Will there be no change in Fed interest rates after the September 2026 meeting?",
+      "slug": "will-there-be-no-change-in-fed-interest-rates-after-the-september-2026-meeting-615",
+      "stage": "C",
+      "fails": [
+        "не попал в лимит стадии C: слишком много внимания к рынку"
+      ],
+      "diag": {
+        "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+        "http": 200,
+        "content_type": "text/html",
+        "is_data": false,
+        "is_shell": false,
+        "terms_found": []
+      }
+    },
+    {
+      "q": "Will the Fed decrease interest rates by 25 bps after the September 2026 meeting?",
+      "slug": "will-the-fed-decrease-interest-rates-by-25-bps-after-the-september-2026-meeting-586",
+      "stage": "C",
+      "fails": [
+        "не попал в лимит стадии C: слишком много внимания к рынку"
+      ],
+      "diag": {
+        "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+        "http": 200,
+        "content_type": "text/html",
+        "is_data": false,
+        "is_shell": false,
+        "terms_found": []
+      }
+    },
+    {
+      "q": "Will Khvicha Kvaratskhelia win the 2026 Ballon d'Or?",
+      "slug": "will-khvicha-kvaratskhelia-win-the-2026-ballon-dor",
+      "stage": "C",
+      "fails": [
+        "цитата не найдена в правилах: will-khvicha-kvaratskhelia-win-the-2026-ballon-dor"
+      ],
+      "diag": {
+        "source_url": "https://www.francefootball.fr/",
+        "http": 200,
+        "content_type": "text/html; charset=utf-8",
+        "is_data": false,
+        "is_shell": false,
+        "terms_found": []
+      }
+    },
+    {
+      "q": "Will Michael Olise win the 2026 Ballon d'Or?",
+      "slug": "will-michael-olise-win-the-2026-ballon-dor",
+      "stage": "C",
+      "fails": [
+        "цитата не найдена в правилах: will-michael-olise-win-the-2026-ballon-dor"
+      ],
+      "diag": {
+        "source_url": "https://www.francefootball.fr/",
+        "http": 200,
+        "content_type": "text/html; charset=utf-8",
+        "is_data": false,
+        "is_shell": false,
+        "terms_found": []
+      }
+    },
+    {
+      "q": "Will Project Hail Mary be the top grossing movie of 2026?",
+      "slug": "will-project-hail-mary-be-the-top-grossing-movie-of-2026",
+      "stage": "C",
+      "fails": [
+        "цитата не найдена в правилах: will-project-hail-mary-be-the-top-grossing-movie-of-2026"
+      ],
+      "diag": {
+        "source_url": "https://www.boxofficemojo.com/year/2026/?grossesOption=calendarGrosses",
+        "http": 200,
+        "content_type": "text/html;charset=utf-8",
+        "is_data": false,
+        "is_shell": false,
+        "terms_found": [
+          "Gross"
+        ]
+      }
+    },
+    {
+      "q": "Will Erling Haaland win the 2026 Ballon d'Or?",
+      "slug": "will-erling-haaland-win-the-2026-ballon-dor",
+      "stage": "C",
+      "fails": [
+        "цитата не найдена в правилах: will-erling-haaland-win-the-2026-ballon-dor"
+      ],
+      "diag": {
+        "source_url": "https://www.francefootball.fr/",
+        "http": 200,
+        "content_type": "text/html; charset=utf-8",
+        "is_data": false,
+        "is_shell": false,
+        "terms_found": []
+      }
+    },
+    {
+      "q": "Puffpaw FDV above $50M one day after launch?",
+      "slug": "puffpaw-fdv-above-50m-one-day-after-launch",
+      "stage": "C",
+      "fails": [
+        "модель: процедура неисполнима",
+        "требует человека: Три качественных шага: (1) квалификация «launch» через признак «actively, publicly transferable and tradable» — «активно» и «публично» суть оценочные качественные признаки без порога и без реестра, определяющие момент отсчёта, а значит и исход; (2) выбор «most liquid price source available» — источник не назван, требуется человеческое сравнение площадок и толкование метрики ликвидности; (3) выбор значения «total token supply» — не указано, берётся ли totalSupply контракта, max supply или заявленная эмиссия. Все три влияют на Yes/No, а не только на срок."
+      ],
+      "diag": {
+        "source_url": "https://www.puffpaw.xyz/",
+        "http": 200,
+        "content_type": "text/html;charset=utf-8",
+        "is_data": false,
+        "is_shell": false,
+        "terms_found": []
+      }
+    },
+    {
+      "q": "Puffpaw FDV above $100M one day after launch?",
+      "slug": "puffpaw-fdv-above-100m-one-day-after-launch",
+      "stage": "C",
+      "fails": [
+        "модель: процедура неисполнима",
+        "требует человека: Три качественных развилки без машинного критерия: (1) момент 'launch' определяется через оценочный признак «actively, publicly transferable and tradable» — не задан ни порог активности, ни площадка, ни реестр событий; (2) идентификация самого «governance token» Puffpaw (контракт/тикер/ID) в правилах отсутствует; (3) «the most liquid price source available» требует выбора метрики ликвидности и перечня площадок — толкование, влияющее на исход Yes/No, а не только на срок. Дополнительно неоднозначно «total token supply» (total vs max vs с учётом burn) без указанного источника данных.",
+        "цитата не найдена в правилах: puffpaw-fdv-above-100m-one-day-after-launch; end_date 2027-0"
+      ],
+      "diag": {
+        "source_url": "https://www.puffpaw.xyz/",
+        "http": 200,
+        "content_type": "text/html;charset=utf-8",
+        "is_data": false,
+        "is_shell": false,
+        "terms_found": []
+      }
+    },
+    {
+      "q": "Will Kylian Mbappé win the 2026 Ballon d'Or?",
+      "slug": "will-kylian-mbapp-win-the-2026-ballon-dor",
+      "stage": "C",
+      "fails": [
+        "цитата не найдена в правилах: will-kylian-mbapp-win-the-2026-ballon-dor"
+      ],
+      "diag": {
+        "source_url": "https://www.francefootball.fr/",
+        "http": 200,
+        "content_type": "text/html; charset=utf-8",
+        "is_data": false,
+        "is_shell": false,
+        "terms_found": []
+      }
+    },
+    {
+      "q": "Will Lamine Yamal win the 2026 Ballon d'Or?",
+      "slug": "will-lamine-yamal-win-the-2026-ballon-dor",
+      "stage": "C",
+      "fails": [
+        "цитата не найдена в правилах: will-lamine-yamal-win-the-2026-ballon-dor"
+      ],
+      "diag": {
+        "source_url": "https://www.francefootball.fr/",
+        "http": 200,
+        "content_type": "text/html; charset=utf-8",
+        "is_data": false,
+        "is_shell": false,
+        "terms_found": []
+      }
+    },
+    {
+      "q": "Will Ousmane Dembélé win the 2026 Ballon d'Or?",
+      "slug": "will-ousmane-dembl-win-the-2026-ballon-dor",
+      "stage": "C",
+      "fails": [
+        "цитата не найдена в правилах: will-ousmane-dembl-win-the-2026-ballon-dor"
+      ],
+      "diag": {
+        "source_url": "https://www.francefootball.fr/",
+        "http": 200,
+        "content_type": "text/html; charset=utf-8",
+        "is_data": false,
+        "is_shell": false,
+        "terms_found": []
+      }
     }
   ]
 }
